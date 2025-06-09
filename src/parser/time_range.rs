@@ -1,6 +1,6 @@
 use super::TimeUnit;
 use crate::error::AppError::{self, ParseError};
-use std::fmt;
+use std::{fmt, time::Duration};
 
 #[derive(Debug)]
 pub struct TimeRange {
@@ -44,5 +44,14 @@ impl fmt::Display for TimeRange {
             self.unit,
             if self.value != 1 { "s" } else { "" }
         )
+    }
+}
+
+impl From<&TimeRange> for Duration {
+    fn from(tr: &TimeRange) -> Self {
+        match tr.unit {
+            TimeUnit::Hour => Duration::from_secs(3600 * (tr.value as u64)),
+            TimeUnit::Day => Duration::from_secs(3600 * 24 * (tr.value as u64)),
+        }
     }
 }

@@ -1,6 +1,8 @@
 pub mod http_server;
 pub mod error;
 pub mod parser;
+pub mod query_engine;
+pub mod data;
 
 use http_server::start_server;
 use error::AppError;

@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::error::AppError::{self, ParseError};
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
 #[non_exhaustive]
 pub enum Metric {
     Volume,

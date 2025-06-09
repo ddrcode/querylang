@@ -2,7 +2,7 @@ use pest::Parser;
 use serde::{Deserialize, Serialize};
 use axum::{http::StatusCode, response::IntoResponse, Json};
 
-use crate::{error::AppError::{self, ParseError}, parser::{parse_query, Query, QueryParser, Rule}};
+use crate::{error::AppError::{self, ParseError}, parser::{parse_query, Query, QueryParser, Rule}, query_engine::QueryPlan};
 
 #[derive(Deserialize)]
 pub struct QueryReq {
@@ -26,7 +26,11 @@ impl QueryResp {
 
 pub async fn handle_query(Json(req): Json<QueryReq>) -> Result<impl IntoResponse, StatusCode> {
     let msg = match parse(&req.query) {
-        Ok(query) => QueryResp::new("ok", &format!("You sent: {}", query)),
+        Ok(query) => {
+            let plan = QueryPlan::from(&query);
+            dbg!(plan);
+            QueryResp::new("ok", &format!("You sent: {}", query))
+        },
         Err(err) => QueryResp::new("error", &err.to_string())
     };
     Ok(Json(msg))

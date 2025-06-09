@@ -3,9 +3,9 @@ use super::{Expr, TimeRange};
 
 #[derive(Debug)]
 pub struct Query {
-    pub expressions: Vec<Expr>,
-    pub for_clause: TimeRange,
-    pub step: TimeRange,
+    expressions: Vec<Expr>,
+    for_clause: TimeRange,
+    step: TimeRange,
 }
 
 impl Query {
@@ -15,6 +15,18 @@ impl Query {
             for_clause,
             step: step_clause,
         }
+    }
+
+    pub fn expressions(&self) -> &Vec<Expr> {
+        &self.expressions
+    }
+
+    pub fn for_clause(&self) -> &TimeRange {
+        &self.for_clause
+    }
+
+    pub fn step(&self) -> &TimeRange {
+        &self.step
     }
 }
 
