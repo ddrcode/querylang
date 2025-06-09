@@ -1,5 +1,17 @@
 mod parser;
-mod model;
+mod query;
+mod expr;
+mod operator;
+mod metric;
+mod symbol_metric;
+mod time_unit;
+mod time_range;
 
 pub use parser::*;
-pub use model::*;
+pub use query::*;
+pub use expr::*;
+pub use operator::*;
+pub use metric::*;
+pub use symbol_metric::*;
+pub use time_unit::*;
+pub use time_range::*;
