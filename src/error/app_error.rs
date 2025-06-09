@@ -1,4 +1,5 @@
-use pest::error::Error;
+use pest;
+use reqwest;
 use thiserror::Error;
 
 use crate::parser::Rule;
@@ -11,11 +12,23 @@ pub enum AppError {
     ParseError(&'static str),
 
     #[error("Parser error: {0}")]
-    PestError(String)
+    PestError(String),
+
+    #[error("GraphQL error: {0}")]
+    GQLError(String),
+
+    #[error("Network error: {0}")]
+    NetworkError(String)
 }
 
-impl From<Error<Rule>> for AppError {
-    fn from(value: Error<Rule>) -> Self {
-        AppError::PestError(value.to_string())
+impl From<pest::error::Error<Rule>> for AppError {
+    fn from(err: pest::error::Error<Rule>) -> Self {
+        AppError::PestError(err.to_string())
+    }
+}
+
+impl From<reqwest::Error> for AppError {
+    fn from(err: reqwest::Error) -> Self {
+        AppError::NetworkError(err.to_string())
     }
 }

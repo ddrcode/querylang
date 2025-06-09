@@ -1,0 +1,10 @@
+query GetMetrics($symbol: String!, $metrics: [String!]!, $from: String!, $to: String!, $step: String!) {
+  getMetrics(symbol: $symbol, metrics: $metrics, from: $from, to: $to, step: $step) {
+    timestamp
+    values {
+      metric
+      value
+    }
+  }
+}
+

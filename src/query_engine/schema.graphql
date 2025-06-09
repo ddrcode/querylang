@@ -1,0 +1,14 @@
+type Query {
+  getMetrics(symbol: String!, metrics: [String!]!, from: String!, to: String!, step: String!): [MetricRecord!]!
+}
+
+type MetricRecord {
+  timestamp: String! @date(format: "yyyy-MM-dd'T'HH:mm:ss")
+  values: [MetricValue!]!
+}
+
+type MetricValue {
+  metric: String!
+  value: Float! @float(min: 10, max: 500)
+}
+

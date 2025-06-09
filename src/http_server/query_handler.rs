@@ -1,8 +1,13 @@
+use axum::{http::StatusCode, response::IntoResponse, Json};
 use pest::Parser;
 use serde::{Deserialize, Serialize};
-use axum::{http::StatusCode, response::IntoResponse, Json};
 
-use crate::{error::AppError::{self, ParseError}, parser::{parse_query, Query, QueryParser, Rule}, query_engine::QueryPlan};
+use crate::{
+    config,
+    error::AppError::{self, ParseError},
+    parser::{parse_query, Query, QueryParser, Rule},
+    query_engine::{GraphQLClient, QueryPlan},
+};
 
 #[derive(Deserialize)]
 pub struct QueryReq {
@@ -12,28 +17,32 @@ pub struct QueryReq {
 #[derive(Serialize)]
 pub struct QueryResp {
     status: String,
-    message: String
+    message: String,
 }
 
 impl QueryResp {
     pub fn new(status: &str, message: &str) -> Self {
         Self {
             status: status.to_string(),
-            message: message.to_string()
+            message: message.to_string(),
         }
     }
 }
 
 pub async fn handle_query(Json(req): Json<QueryReq>) -> Result<impl IntoResponse, StatusCode> {
-    let msg = match parse(&req.query) {
-        Ok(query) => {
-            let plan = QueryPlan::from(&query);
-            dbg!(plan);
-            QueryResp::new("ok", &format!("You sent: {}", query))
-        },
-        Err(err) => QueryResp::new("error", &err.to_string())
+    let resp = match execute_query(&req.query).await {
+        Ok(data) => QueryResp::new("ok", &data),
+        Err(err) => QueryResp::new("error", &err.to_string()),
     };
-    Ok(Json(msg))
+    Ok(Json(resp))
+}
+
+async fn execute_query(query_str: &str) -> Result<String, AppError> {
+    let parsed_query = parse(query_str)?;
+    let gql_client = GraphQLClient::new(config::GRAPHQL_SERVER);
+    let plan = QueryPlan::from(&parsed_query);
+
+    gql_client.fetch_metrics().await
 }
 
 fn parse(query: &str) -> Result<Query, AppError> {

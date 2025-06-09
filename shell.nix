@@ -7,6 +7,8 @@ pkgs.mkShell {
     rustc
     rustfmt
     treefmt
+    nodejs_22
+    yarn
   ];
 
   # inputsFrom = [ pkgs.hello pkgs.gnutar ];
