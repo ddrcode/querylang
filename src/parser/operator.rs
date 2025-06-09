@@ -1,6 +1,7 @@
+use std::fmt;
 use crate::error::AppError::{self, ParseError};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Operator {
     Add,
     Sub,
@@ -23,3 +24,15 @@ impl TryFrom<&str> for Operator {
     }
 }
 
+impl fmt::Display for Operator {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use Operator::*;
+        let op = match self {
+            Add => "+",
+            Sub => "-",
+            Mul => "*",
+            Div => "/"
+        };
+        write!(f, "{}", op)
+    }
+}

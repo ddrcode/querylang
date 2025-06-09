@@ -1,6 +1,7 @@
 use crate::error::AppError::{self, ParseError};
+use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum TimeUnit {
     Hour,
     Day,
@@ -21,3 +22,16 @@ impl TryFrom<&str> for TimeUnit {
     }
 }
 
+impl fmt::Display for TimeUnit {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use TimeUnit::*;
+        write!(
+            f,
+            "{}",
+            match self {
+                Hour => "hour",
+                Day => "day",
+            }
+        )
+    }
+}

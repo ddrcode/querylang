@@ -217,8 +217,8 @@ mod test {
         let input = r"FOR LAST 10 days";
         let parsed = parse(Rule::for_clause, input);
         let time = parse_for_clause(parsed).unwrap();
-        assert_eq!(10, time.value);
-        assert_eq!(TimeUnit::Day, time.unit);
+        assert_eq!(10, time.value());
+        assert_eq!(TimeUnit::Day, time.unit());
     }
 
     #[test]
@@ -227,8 +227,8 @@ mod test {
         let parsed = parse(Rule::step_clause, input);
         debug_pair(&parsed, 0);
         let step = parse_step_clause(parsed).unwrap();
-        assert_eq!(1, step.value);
-        assert_eq!(TimeUnit::Day, step.unit);
+        assert_eq!(1, step.value());
+        assert_eq!(TimeUnit::Day, step.unit());
     }
 
     #[test]

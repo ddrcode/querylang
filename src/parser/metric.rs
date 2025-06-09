@@ -1,6 +1,8 @@
+use std::fmt;
 use crate::error::AppError::{self, ParseError};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
+#[non_exhaustive]
 pub enum Metric {
     Volume,
     Max,
@@ -27,3 +29,17 @@ impl TryFrom<&str> for Metric {
     }
 }
 
+impl fmt::Display for Metric {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use Metric::*;
+        let val = match self {
+            Volume => "volume",
+            Max => "max",
+            Min => "min",
+            Open => "open",
+            Close => "close",
+            Avg => "avg",
+        };
+        write!(f, "{}", val)
+    }
+}

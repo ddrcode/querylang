@@ -1,3 +1,4 @@
+use std::fmt;
 use super::{Operator, SymbolMetric};
 
 #[derive(Debug, PartialEq)]
@@ -7,3 +8,13 @@ pub enum Expr {
     Value(u32),
 }
 
+impl fmt::Display for Expr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use Expr::*;
+        match self {
+            Binary(left, op, right) => write!(f, "{} {} {}", left, op, right),
+            Data(symbol) => write!(f, "{}", symbol),
+            Value(val) => write!(f, "{}", val)
+        }
+    }
+}

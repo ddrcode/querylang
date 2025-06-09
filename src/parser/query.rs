@@ -1,3 +1,4 @@
+use std::fmt;
 use super::{Expr, TimeRange};
 
 #[derive(Debug)]
@@ -17,3 +18,9 @@ impl Query {
     }
 }
 
+impl fmt::Display for Query {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let expr: Vec<String> = self.expressions.iter().map(|e| e.to_string()).collect();
+        write!(f, "GET {} FOR {} STEP {}", expr.join(", "), self.for_clause, self.step)
+    }
+}

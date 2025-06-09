@@ -1,5 +1,4 @@
-use crate::error::AppError::{self, ParseError};
-
+use std::fmt;
 use super::Metric;
 
 #[derive(Debug, PartialEq)]
@@ -14,5 +13,11 @@ impl SymbolMetric {
             symbol: symbol.to_string(),
             metric,
         }
+    }
+}
+
+impl fmt::Display for SymbolMetric {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}.{}", self.symbol, self.metric)
     }
 }
