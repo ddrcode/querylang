@@ -1,0 +1,16 @@
+[package]
+name = "querylang"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.8.4"
+pest = "2.8.0"
+pest_derive = "2.8.0"
+serde = { version="1.0.219", features=["derive"] }
+tokio = { version="1.45.1", features=["full"] }
+tower = { version = "0.5.2", features = ["tokio", "timeout", "tracing"] }
+tower-http = { version="0.6.6", features=["trace"] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["fmt", "env-filter"] }
+

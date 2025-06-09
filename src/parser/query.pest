@@ -1,0 +1,34 @@
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+NEWLINE    = _{ "\n" | "\r\n" }
+
+// symbolic data
+
+metric = { "open" | "close" | "avg" | "max" | "min" | "volume" }
+symbol = @{ ASCII_ALPHANUMERIC+ }
+data   = { symbol ~ "." ~ metric }
+
+
+// expressions
+
+expr_op       = { "+" | "-" }
+term_op       = { "*" | "/" }
+
+expr      = { term ~ (expr_op ~ term)* }
+term      = { factor ~ (term_op ~ factor)* }
+factor    = { data | value | "(" ~ expr ~ ")" }
+
+expr_list = { expr ~ ("," ~ expr)* }
+
+
+// time expressions
+
+value     = @{ ASCII_DIGIT+ }
+time_unit = { "day" | "days" | "hour" | "hours" }
+
+
+// query
+
+for_clause  = { "FOR LAST" ~ value ~ time_unit }
+step_clause = { "STEP" ~ value ~ time_unit }
+query       = { "GET" ~ expr_list ~ for_clause ~ step_clause }
+
