@@ -7,16 +7,21 @@ use super::DataTarget;
 #[derive(Debug)]
 pub struct QueryPlan {
     targets: Vec<DataTarget>,
+    range: Duration,
     step: Duration,
 }
 
 impl QueryPlan {
-    pub fn new(targets: Vec<DataTarget>, step: Duration) -> Self {
-        Self { targets, step }
+    pub fn new(targets: Vec<DataTarget>, range: Duration, step: Duration) -> Self {
+        Self { targets, range, step }
     }
 
     pub fn targets(&self) -> impl Iterator<Item = &DataTarget> {
         self.targets.iter()
+    }
+
+    pub fn range(&self) -> Duration {
+        self.range
     }
 
     pub fn step(&self) -> Duration {
@@ -42,6 +47,7 @@ impl From<&Query> for QueryPlan {
 
         QueryPlan {
             targets: Vec::from_iter(targets.values().cloned()),
+            range: Duration::from(query.for_clause()),
             step: Duration::from(query.step()),
         }
     }
