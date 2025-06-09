@@ -40,9 +40,9 @@ impl From<&Query> for QueryPlan {
 
         for sm in symbols {
             let target = targets
-                .entry(sm.symbol.clone())
-                .or_insert_with(|| DataTarget::new(&sm.symbol));
-            target.add_metric(sm.metric);
+                .entry(sm.symbol().to_string())
+                .or_insert_with(|| DataTarget::new(sm.symbol()));
+            target.add_metric(sm.metric());
         }
 
         QueryPlan {

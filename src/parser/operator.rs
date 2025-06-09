@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::error::AppError::{self, ParseError};
+use std::fmt;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Operator {
@@ -7,6 +7,18 @@ pub enum Operator {
     Sub,
     Mul,
     Div,
+}
+
+impl Operator {
+    pub fn opfn(&self) -> fn(f32, f32) -> f32 {
+        use Operator::*;
+        match self {
+            Add => |a, b| a + b,
+            Sub => |a, b| a - b,
+            Mul => |a, b| a * b,
+            Div => |a, b| a / b,
+        }
+    }
 }
 
 impl TryFrom<&str> for Operator {
@@ -31,7 +43,7 @@ impl fmt::Display for Operator {
             Add => "+",
             Sub => "-",
             Mul => "*",
-            Div => "/"
+            Div => "/",
         };
         write!(f, "{}", op)
     }

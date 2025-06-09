@@ -11,8 +11,8 @@ use crate::{
 
 use super::{build_query_vars, get_metrics, GetMetrics, QueryPlan};
 
-type MetricData = HashMap<Metric, Vec<f32>>;
-type SymbolData = HashMap<String, MetricData>;
+pub type MetricData = HashMap<Metric, Vec<f32>>;
+pub type SymbolData = HashMap<String, MetricData>;
 
 /// Asynchronously fetches metric data for all targets in the provided query plan.
 /// Internally executes multiple GraphQL queries in parallel: one per target,

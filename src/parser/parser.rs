@@ -2,7 +2,7 @@ use crate::error::AppError::{self, ParseError};
 use pest::iterators::Pair;
 use pest_derive::Parser;
 
-use super::{Expr, Metric, Operator, Query, SymbolMetric, TimeRange, TimeUnit};
+use super::{Expr, Metric, Operator, Query, SymbolMetric, TimeSpec, TimeUnit};
 
 type ParseResult<T> = Result<T, AppError>;
 
@@ -93,7 +93,7 @@ fn parse_factor(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
     Ok(val)
 }
 
-fn parse_step_clause(pair: Pair<Rule>) -> Result<TimeRange, AppError> {
+fn parse_step_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
     if pair.as_rule() != Rule::step_clause {
         return Err(ParseError("Expected Rule::step_clause"));
     }
@@ -102,10 +102,10 @@ fn parse_step_clause(pair: Pair<Rule>) -> Result<TimeRange, AppError> {
     let value = parse_value(inner.next())?;
     let unit = parse_time_unit(inner.next())?;
 
-    Ok(TimeRange::new(value, unit))
+    Ok(TimeSpec::new(value, unit))
 }
 
-fn parse_for_clause(pair: Pair<Rule>) -> Result<TimeRange, AppError> {
+fn parse_for_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
     if pair.as_rule() != Rule::for_clause {
         return Err(ParseError("Expected Rule::for_clause"));
     }
@@ -114,7 +114,7 @@ fn parse_for_clause(pair: Pair<Rule>) -> Result<TimeRange, AppError> {
     let value = parse_value(inner.next())?;
     let unit = parse_time_unit(inner.next())?;
 
-    Ok(TimeRange::new(value, unit))
+    Ok(TimeSpec::new(value, unit))
 }
 
 fn parse_symbol(pair: Option<Pair<Rule>>) -> ParseResult<String> {

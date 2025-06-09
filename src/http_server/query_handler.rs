@@ -1,15 +1,11 @@
-use std::time::SystemTime;
-
 use axum::{http::StatusCode, response::IntoResponse, Json};
 use pest::Parser;
 use serde::{Deserialize, Serialize};
-use futures::future::join_all;
 
 use crate::{
-    config,
     error::AppError::{self, ParseError},
     parser::{parse_query, Query, QueryParser, Rule},
-    query_engine::{build_vars, GraphQLClient, QueryPlan},
+    query_engine::{fetch_all_query_metrics, QueryPlan},
 };
 
 #[derive(Deserialize)]
@@ -42,21 +38,8 @@ pub async fn handle_query(Json(req): Json<QueryReq>) -> Result<impl IntoResponse
 
 async fn execute_query(query_str: &str) -> Result<String, AppError> {
     let parsed_query = parse(query_str)?;
-    let gql_client = GraphQLClient::new(config::GRAPHQL_SERVER);
     let plan = QueryPlan::from(&parsed_query);
-
-    let to = SystemTime::now();
-    let from = to.checked_sub(plan.range()).unwrap();
-
-    let futures = plan.targets().map(|target| {
-        let client = gql_client.clone();
-        let vars = build_vars(target, from, to, plan.step());
-        async move {
-            client.fetch_metrics(vars).await
-        }
-    });
-
-    let result = join_all(futures).await;
+    let result = fetch_all_query_metrics(&plan).await?;
 
     Ok(String::from("koza"))
 }

@@ -3,8 +3,8 @@ use super::Metric;
 
 #[derive(Debug, PartialEq)]
 pub struct SymbolMetric {
-    pub symbol: String,
-    pub metric: Metric,
+    symbol: String,
+    metric: Metric,
 }
 
 impl SymbolMetric {
@@ -13,6 +13,14 @@ impl SymbolMetric {
             symbol: symbol.to_string(),
             metric,
         }
+    }
+
+    pub fn symbol(&self) -> &str {
+        &self.symbol
+    }
+
+    pub fn metric(&self) -> Metric {
+        self.metric
     }
 }
 
