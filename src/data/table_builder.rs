@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use crate::{error::AppError, parser::Query, query_engine::SymbolData};
 use super::{Table, compute_all_columns};
+use crate::{error::AppError, parser::Query, query_engine::SymbolData};
 
 /// Converts data from grapql server into an output table
 /// First it computes all columns (applying query expressions)
@@ -14,7 +14,7 @@ pub async fn compute_table(query: &Query, data: SymbolData) -> Result<Table, App
 
     let rows = transpose(columns);
 
-    let mut headers = vec!["timestamp".to_string()];
+    let mut headers = vec!["time step".to_string()];
     headers.extend(query.expressions().iter().map(|expr| expr.to_string()));
 
     Ok(Table::new(headers, rows))
