@@ -23,7 +23,6 @@ impl TryFrom<&str> for Metric {
             "open" => Metric::Open,
             "close" => Metric::Close,
             "avg" => Metric::Avg,
-            "string" => Metric::Open,
             other => return Err(AppError::DataError(format!("Unknown metric: {other}"))),
         };
         Ok(val)
