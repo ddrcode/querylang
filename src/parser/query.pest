@@ -23,7 +23,7 @@ expr_list = { expr ~ ("," ~ expr)* }
 // time expressions
 
 value     = @{ ASCII_DIGIT+ }
-time_unit = { "day" | "days" | "hour" | "hours" }
+time_unit = { "days" | "day" | "hours" | "hour" }
 
 
 // query
