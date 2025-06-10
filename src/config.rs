@@ -1,3 +1,3 @@
 pub const QUERY_SERVER: &'static str = "0.0.0.0:3000";
 pub const GRAPHQL_SERVER: &'static str = "http://localhost:8001/graphql";
-pub const MAX_HEADER_WIDTH: usize = 20;
+pub const MAX_HEADER_WIDTH: usize = 10;

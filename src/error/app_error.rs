@@ -11,9 +11,6 @@ pub enum AppError {
     #[error("Query parse error: {0}")]
     ParseError(String),
 
-    #[error("Parser error: {0}")]
-    PestError(String),
-
     #[error("GraphQL error: {0}")]
     GQLError(String),
 
@@ -26,7 +23,7 @@ pub enum AppError {
 
 impl From<pest::error::Error<Rule>> for AppError {
     fn from(err: pest::error::Error<Rule>) -> Self {
-        AppError::PestError(err.to_string())
+        AppError::ParseError(err.to_string())
     }
 }
 

@@ -95,7 +95,7 @@ async fn execute_query(query_str: &str) -> Result<Table, AppError> {
     let parsed_query = parse(query_str)?;
     let plan = QueryPlan::from(&parsed_query);
     let data = fetch_all_query_metrics(&plan).await?;
-    let table = compute_table(parsed_query.expressions(), data, parsed_query.rows_count()).await?;
+    let table = compute_table(&parsed_query, data).await?;
 
     Ok(table)
 }

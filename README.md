@@ -1,18 +1,19 @@
 # QueryServer POC
 
-The POC introduces a simple, SQL-inspired language for querying intraday stock data.
+The POC introduces a simple, SQL-inspired language for querying intraday stock data
+for a given period, with a given step.
 It returns the data as a table in either text or JSON format.
 
 
 ## Execution
-1. Start mock GraphQl server: `cargo run --bin=gqlmock`
-2. Start query server: `RUST_LOG=debug cargo run --bin=query`
+1. Start mock GraphQl server (port 8001): `cargo run --bin=gqlmock`
+2. Start query server (port 3000): `RUST_LOG=debug cargo run --bin=query`
 3. Execute query with curl:
-```
-curl -X POST http://localhost:3000/query \
-  -H "Content-Type: application/json" \
-  -d '{"query": "GET APPL.max, GOOGL.open, GOOGL.volume FOR LAST 1 day STEP 1 hour", "format": "text"}'
-```
+    ```
+    curl -X POST http://localhost:3000/query \
+      -H "Content-Type: application/json" \
+      -d '{"query": "GET APPL.max, GOOGL.open, GOOGL.volume FOR LAST 1 day STEP 1 hour", "format": "text"}'
+    ```
 
 It should produce a following output:
 
@@ -66,6 +67,10 @@ and also log the GrapQl query as the server's debug:
 }
 ```
 
+The `format` option of the query accepts two values: `json` and `text` (the latter as default).
+
+There is also a GrapQL test/playground web app: open `localhost:8001` in the browser.
+
 
 ## Main components and libraries used
 - HTTP server - Axum, Tower, Tokio
@@ -87,7 +92,7 @@ and also log the GrapQl query as the server's debug:
 
 ## Query language
 
-Th language allows for quering prices and volumes from the last `n` time units in given interval
+The language allows for querying prices and volumes from the last `n` time units in given interval
 (time series data). I.e. to retrieve GOOGL max price (per interval) for last 3 days in 2h intervals
 the query should look like
 
@@ -95,8 +100,8 @@ the query should look like
 GET GOOGL.max FOR LAST 3 days STEP 2 hours
 ```
 
-The number of resulted rows is equal `last 72 hours / 2 hours step = 36`.
-If there is no data for given interval the value is 0.
+The number of resulted rows is equal to `last 72 hours / 2 hours step = 36`.
+The asumption is that If there is no data for given interval the value is 0.
 
 Multiple assets can be fetched, each will result in a separate column:
 
@@ -116,14 +121,16 @@ STEP 1 day
 
 The language is case-sensitive. It allows for splitting the code into multiple lines.
 
+The DSL grammar definition is described in [`query.pest`](src/parser/query.pest) file.
+
 
 ## Key source files
 
 ### Logic
 
-- `query_handler.rs` - glues together entire logic - request handling, parsing, data quring and
+- `query_handler.rs` - glues together entire logic - request handling, parsing, data querying and
 output generation
-- `parser.rs` - code parsing logic
+- `parser.rs` - code parsing logic (grammar for parser is defined in `query.pest` file)
 - `gql_client.rs` - handling GraphQL queries
 - `table_builder.rs` - data post-processing - table generation
 - `column_builder.rs` - data post-processing - expressions execution
@@ -141,15 +148,16 @@ output generation
 ### Current
 
 - async networking (request handling, GQL querying) with Tokio
-- paralllel column generation (each column in a separate task)
+- parallel column generation (each column in a separate task)
 - fast parsing engine
+- no panics, no `unwrap` calls; well-defined error handling
 
 ### Easy to add
 
 - parallel data postprocessing with Rayon
 - query and output data caching
-- streaming the output data (instead of HTTP response)
 
 ### Worth considering
 
 - Compiling query language expressions into WebAssembly
+- streaming the output data (instead of HTTP response)
