@@ -7,10 +7,10 @@ data over a time range with custom step size.  Returns data as a table, in eithe
 ## Quickstart
 
 1. **Start the mock GraphQL server** (port 8001)
-    `cargo run --bin=gqlmock`
+    ``` cargo run --bin=gqlmock ```
 
 2. **Start the query server** (port 3000):
-    `RUST_LOG=debug cargo run --bin=query`
+    ``` RUST_LOG=debug cargo run --bin=query ```
 
 3. **Run a sample query:**
     ```
@@ -22,7 +22,7 @@ data over a time range with custom step size.  Returns data as a table, in eithe
 Sample text output:
 
 ```
-interval    APPL.max  GOOGL.open  GOOGL.v...
+time step  APPL.max  GOOGL.open  GOOGL.v...
 ---------------------------------------------
         0   114.86     109.11    2046.05
         1   153.54     110.65    2139.16
@@ -51,7 +51,7 @@ interval    APPL.max  GOOGL.open  GOOGL.v...
 
 ```
 
-**GraphQL debug log example:**
+Generated GraphQL query example (server log):
 
 ```
 2025-06-10T12:25:32.604435Z DEBUG request{method=POST uri=/query version=HTTP/1.1}: query::query_engine::gql_client: GraphQL Query payload: {
@@ -159,15 +159,30 @@ STEP 1 day
 
 ## Key Source Files
 
-- `query_handler.rs` - request handling, parsing, data querying, output generation
-- `parser.rs` - query parsing logic (grammar file: `query.pest`)
-- `gql_client.rs` - GraphQL queries
-- `table_builder.rs` - table generation from results
-- `column_builder.rs` - expressions execution on columns
-- `server.rs` - mock GraphQL server
+- [`query_handler.rs`](src/) - request handling, parsing, data querying, output generation
+- [`parser.rs`](src/parser/parser.rs) - query parsing logic (grammar file:
+[`query.pest`](src/parser/query.pest))
+- [`gql_client.rs`](src/query_engine/gql_client.rs) - GraphQL queries
+- [`table_builder.rs`](src/data/table_builder.rs) - table generation from results
+- [`column_builder.rs`](src/data/column_builder.rs) - expressions execution on columns
+- [`server.rs`](src/gql_server/server.rs) - mock GraphQL server
 
 Models:
-- `query.rs` - query (DSL) representation after parsing
-- `query_plan.rs` - symbol/metric representation for GQL querying
-- `table.rs` - output data representation and formatting
+- [`query.rs`](src/parser/query.rs) - query (DSL) representation after parsing
+- [`query_plan.rs`](src/query_engine/query_plan.rs) - symbol/metric representation for GQL querying
+- [`table.rs`](src/data/table.rs) - output data representation and formatting
 
+## Folder structure
+
+```
+src/
+├── data/               # Post-processing: table and column builders
+├── gql_server/         # Mock GraphQL server
+├── http_server/        # Main server and glue logic
+├── parser/             # Query DSL, grammar, parser code
+├── query_engine/       # Query planning and GraphQL client
+├── error/              # Error definitions
+├── main.rs             # Entrypoint for query server
+├── config.rs           # Configuration options
+└── ...
+```
