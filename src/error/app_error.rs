@@ -9,7 +9,7 @@ use crate::parser::Rule;
 pub enum AppError {
 
     #[error("Query parse error: {0}")]
-    ParseError(&'static str),
+    ParseError(String),
 
     #[error("Parser error: {0}")]
     PestError(String),
@@ -18,7 +18,10 @@ pub enum AppError {
     GQLError(String),
 
     #[error("Network error: {0}")]
-    NetworkError(String)
+    NetworkError(String),
+
+    #[error("Data processing error: {0}")]
+    DataError(String)
 }
 
 impl From<pest::error::Error<Rule>> for AppError {

@@ -16,7 +16,7 @@ impl TryFrom<&str> for TimeUnit {
             "days" => TimeUnit::Day,
             "hour" => TimeUnit::Hour,
             "hours" => TimeUnit::Hour,
-            _ => return Err(ParseError("Incorrect time unit")),
+            other => return Err(ParseError(format!("Unrecognised time unit: {other}"))),
         };
         Ok(val)
     }

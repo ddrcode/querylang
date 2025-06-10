@@ -1,8 +1,13 @@
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{
+    http::{header, HeaderMap, HeaderValue, StatusCode},
+    response::{IntoResponse, Response},
+    Json,
+};
 use pest::Parser;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    data::{compute_table, Table},
     error::AppError::{self, ParseError},
     parser::{parse_query, Query, QueryParser, Rule},
     query_engine::{fetch_all_query_metrics, QueryPlan},
@@ -11,41 +16,92 @@ use crate::{
 #[derive(Deserialize)]
 pub struct QueryReq {
     query: String,
+    #[serde(default = "default_format")]
+    format: OutputFormat,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum OutputFormat {
+    Json,
+    Text,
+}
+
+fn default_format() -> OutputFormat {
+    OutputFormat::Text
 }
 
 #[derive(Serialize)]
-pub struct QueryResp {
-    status: String,
+pub struct QueryError {
+    status: &'static str,
     message: String,
 }
 
-impl QueryResp {
-    pub fn new(status: &str, message: &str) -> Self {
-        Self {
-            status: status.to_string(),
-            message: message.to_string(),
+pub enum QueryResultResponse {
+    Json(Json<Table>),
+    Text(String),
+    JsonError(StatusCode, Json<QueryError>),
+    TextError(StatusCode, String),
+}
+
+impl IntoResponse for QueryResultResponse {
+    fn into_response(self) -> Response {
+        match self {
+            QueryResultResponse::Json(table) => table.into_response(),
+            QueryResultResponse::Text(txt) => {
+                ([(header::CONTENT_TYPE, "text/plain")], txt).into_response()
+            }
+            QueryResultResponse::JsonError(code, err) => (code, err).into_response(),
+            QueryResultResponse::TextError(code, msg) => {
+                (code, [(header::CONTENT_TYPE, "text/plain")], msg).into_response()
+            }
         }
     }
 }
 
-pub async fn handle_query(Json(req): Json<QueryReq>) -> Result<impl IntoResponse, StatusCode> {
-    let resp = match execute_query(&req.query).await {
-        Ok(data) => QueryResp::new("ok", &data),
-        Err(err) => QueryResp::new("error", &err.to_string()),
-    };
-    Ok(Json(resp))
+pub async fn handle_query(Json(req): Json<QueryReq>) -> impl IntoResponse {
+    match execute_query(&req.query).await {
+        Ok(table) => {
+            let body = match req.format {
+                OutputFormat::Text => QueryResultResponse::Text(table.to_string()),
+                OutputFormat::Json => QueryResultResponse::Json(Json(table)),
+            };
+            (StatusCode::OK, body).into_response()
+        }
+
+        Err(err) => {
+            let status = match err {
+                AppError::ParseError(_) => StatusCode::BAD_REQUEST,
+                AppError::GQLError(_) | AppError::NetworkError(_) => StatusCode::BAD_GATEWAY,
+                _ => StatusCode::INTERNAL_SERVER_ERROR,
+            };
+            let msg = err.to_string();
+            let body = match req.format {
+                OutputFormat::Text => QueryResultResponse::TextError(status, msg),
+                OutputFormat::Json => QueryResultResponse::JsonError(
+                    status,
+                    Json(QueryError {
+                        status: "error",
+                        message: msg,
+                    }),
+                ),
+            };
+            (status, body).into_response()
+        }
+    }
 }
 
-async fn execute_query(query_str: &str) -> Result<String, AppError> {
+async fn execute_query(query_str: &str) -> Result<Table, AppError> {
     let parsed_query = parse(query_str)?;
     let plan = QueryPlan::from(&parsed_query);
-    let result = fetch_all_query_metrics(&plan).await?;
+    let data = fetch_all_query_metrics(&plan).await?;
+    let table = compute_table(parsed_query.expressions(), data, parsed_query.rows_count()).await?;
 
-    Ok(String::from("koza"))
+    Ok(table)
 }
 
 fn parse(query: &str) -> Result<Query, AppError> {
     let mut parsed = QueryParser::parse(Rule::query, query)?;
-    let next = parsed.next().ok_or(ParseError("empty query"))?;
+    let next = parsed.next().ok_or(ParseError("empty query".to_string()))?;
     parse_query(next)
 }

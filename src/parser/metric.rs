@@ -1,5 +1,5 @@
+use crate::error::AppError;
 use std::fmt;
-use crate::error::AppError::{self, ParseError};
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
 #[non_exhaustive]
@@ -9,7 +9,7 @@ pub enum Metric {
     Min,
     Open,
     Close,
-    Avg
+    Avg,
 }
 
 impl TryFrom<&str> for Metric {
@@ -23,7 +23,8 @@ impl TryFrom<&str> for Metric {
             "open" => Metric::Open,
             "close" => Metric::Close,
             "avg" => Metric::Avg,
-            _ => return Err(ParseError("Unknown metric"))
+            "string" => Metric::Open,
+            other => return Err(AppError::DataError(format!("Unknown metric: {other}"))),
         };
         Ok(val)
     }

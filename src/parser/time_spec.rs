@@ -36,11 +36,11 @@ impl TryFrom<(&str, &str)> for TimeSpec {
         let spec = Self {
             value: String::from(value.0)
                 .parse()
-                .map_err(|_| ParseError("Error parsing value in TimeRange"))?,
+                .map_err(|_| ParseError("Error parsing value in TimeRange".to_string()))?,
             unit: TimeUnit::try_from(value.1)?,
         };
         if spec.value < 1 {
-            return Err(ParseError("Time value must be > 0"));
+            return Err(ParseError("Time value must be > 0".to_string()));
         }
         Ok(spec)
     }

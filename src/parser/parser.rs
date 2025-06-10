@@ -14,9 +14,21 @@ pub fn parse_query(pair: Pair<Rule>) -> ParseResult<Query> {
     assert_eq!(pair.as_rule(), Rule::query);
     let mut pairs = pair.into_inner();
 
-    let exprs = parse_expr_list(pairs.next().ok_or(ParseError("Missing expressions list"))?)?;
-    let for_clause = parse_for_clause(pairs.next().ok_or(ParseError("Missing time range"))?)?;
-    let step_clause = parse_step_clause(pairs.next().ok_or(ParseError("Missing interval"))?)?;
+    let exprs = parse_expr_list(
+        pairs
+            .next()
+            .ok_or(ParseError("Missing expressions list".to_string()))?,
+    )?;
+    let for_clause = parse_for_clause(
+        pairs
+            .next()
+            .ok_or(ParseError("Missing time range".to_string()))?,
+    )?;
+    let step_clause = parse_step_clause(
+        pairs
+            .next()
+            .ok_or(ParseError("Missing interval".to_string()))?,
+    )?;
 
     Ok(Query::new(exprs, for_clause, step_clause))
 }
@@ -27,7 +39,7 @@ fn parse_expr_list(pair: Pair<Rule>) -> ParseResult<Vec<Expr>> {
 
 fn parse_expr(pair: Pair<Rule>) -> Result<Expr, AppError> {
     if pair.as_rule() != Rule::expr {
-        return Err(ParseError("Expected Rule::expr"));
+        return Err(ParseError("Expected Rule::expr".to_string()));
     }
 
     let mut inner = pair.into_inner();
@@ -40,7 +52,7 @@ fn parse_expr(pair: Pair<Rule>) -> Result<Expr, AppError> {
                 let op = Operator::try_from(op_pair.as_str())?;
                 left = Expr::Binary(Box::new(left), op, Box::new(right));
             }
-            _ => return Err(ParseError("Unexpected rule in expr")),
+            _ => return Err(ParseError("Unexpected rule in expr".to_string())),
         }
     }
 
@@ -48,7 +60,7 @@ fn parse_expr(pair: Pair<Rule>) -> Result<Expr, AppError> {
 }
 
 fn parse_term(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
-    let pair = pair.ok_or(ParseError("Missing term"))?;
+    let pair = pair.ok_or(ParseError("Missing term".to_string()))?;
 
     let mut inner = pair.into_inner();
     let next_pair = inner.next();
@@ -62,7 +74,7 @@ fn parse_term(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
                 let right = parse_factor(next_pair)?;
                 left = Expr::Binary(Box::new(left), op, Box::new(right));
             }
-            _ => return Err(ParseError("Unexpected rule in term")),
+            _ => return Err(ParseError("Unexpected rule in term".to_string())),
         }
     }
 
@@ -70,14 +82,14 @@ fn parse_term(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
 }
 
 fn parse_factor(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
-    let pair = pair.ok_or(ParseError("Missing factor"))?;
+    let pair = pair.ok_or(ParseError("Missing factor".to_string()))?;
 
     if pair.as_rule() != Rule::factor {
-        return Err(ParseError("Expected Rule::factor"));
+        return Err(ParseError("Expected Rule::factor".to_string()));
     }
 
     let mut inner = pair.into_inner();
-    let pair = inner.next().ok_or(ParseError("Empty factor"))?;
+    let pair = inner.next().ok_or(ParseError("Empty factor".to_string()))?;
 
     let val = match pair.as_rule() {
         Rule::data => {
@@ -88,14 +100,14 @@ fn parse_factor(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
         }
         Rule::value => Expr::Value(parse_value(Some(pair))?),
         Rule::expr => parse_expr(pair)?, // for grouped expressions: (a + b)
-        _ => return Err(ParseError("Unexpected rule in factor")),
+        _ => return Err(ParseError("Unexpected rule in factor".to_string())),
     };
     Ok(val)
 }
 
 fn parse_step_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
     if pair.as_rule() != Rule::step_clause {
-        return Err(ParseError("Expected Rule::step_clause"));
+        return Err(ParseError("Expected Rule::step_clause".to_string()));
     }
 
     let mut inner = pair.into_inner();
@@ -107,7 +119,7 @@ fn parse_step_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
 
 fn parse_for_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
     if pair.as_rule() != Rule::for_clause {
-        return Err(ParseError("Expected Rule::for_clause"));
+        return Err(ParseError("Expected Rule::for_clause".to_string()));
     }
 
     let mut inner = pair.into_inner();
@@ -118,36 +130,36 @@ fn parse_for_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
 }
 
 fn parse_symbol(pair: Option<Pair<Rule>>) -> ParseResult<String> {
-    let val = pair.ok_or(ParseError("Empty symbol"))?;
+    let val = pair.ok_or(ParseError("Empty symbol".to_string()))?;
     if val.as_rule() != Rule::symbol {
-        return Err(ParseError("Expected Rule::symbol"));
+        return Err(ParseError("Expected Rule::symbol".to_string()));
     }
     Ok(val.as_str().to_string())
 }
 
 fn parse_metric(pair: Option<Pair<Rule>>) -> ParseResult<Metric> {
-    let val = pair.ok_or(ParseError("Empty metric"))?;
+    let val = pair.ok_or(ParseError("Empty metric".to_string()))?;
     if val.as_rule() != Rule::metric {
-        return Err(ParseError("Expected Rule::metric"));
+        return Err(ParseError("Expected Rule::metric".to_string()));
     }
     Metric::try_from(val.as_str())
 }
 
 fn parse_value(pair: Option<Pair<Rule>>) -> ParseResult<u32> {
-    let val = pair.ok_or(ParseError("Empty value"))?;
+    let val = pair.ok_or(ParseError("Empty value".to_string()))?;
     if val.as_rule() != Rule::value {
-        return Err(ParseError("Expected Rule::value"));
+        return Err(ParseError("Expected Rule::value".to_string()));
     }
     val.as_str()
         .to_string()
         .parse()
-        .map_err(|_| ParseError("Error parsing value"))
+        .map_err(|_| ParseError("Error parsing value".to_string()))
 }
 
 fn parse_time_unit(pair: Option<Pair<Rule>>) -> ParseResult<TimeUnit> {
-    let val = pair.ok_or(ParseError("Empty time unit"))?;
+    let val = pair.ok_or(ParseError("Empty time unit".to_string()))?;
     if val.as_rule() != Rule::time_unit {
-        return Err(ParseError("Expected Rule::value"));
+        return Err(ParseError("Expected Rule::value".to_string()));
     }
     TimeUnit::try_from(val.as_str())
 }

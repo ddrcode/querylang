@@ -30,7 +30,7 @@ impl TryFrom<&str> for Operator {
             "-" => Operator::Sub,
             "*" => Operator::Mul,
             "/" => Operator::Div,
-            _ => return Err(ParseError("Unknown operator")),
+            op => return Err(ParseError(format!("Unknown operator: {op}"))),
         };
         Ok(op)
     }

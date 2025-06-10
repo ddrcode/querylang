@@ -28,6 +28,10 @@ impl Query {
     pub fn step(&self) -> &TimeSpec {
         &self.step
     }
+
+    pub fn rows_count(&self) -> usize {
+        (self.for_clause.to_seconds() / self.step.to_seconds()).max(1) as usize
+    }
 }
 
 impl fmt::Display for Query {

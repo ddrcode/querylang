@@ -1,7 +1,7 @@
 use std::fmt;
 use super::{Operator, SymbolMetric};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     Binary(Box<Expr>, Operator, Box<Expr>),
     Data(SymbolMetric),

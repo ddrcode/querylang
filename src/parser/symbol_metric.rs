@@ -1,7 +1,7 @@
 use std::fmt;
 use super::Metric;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct SymbolMetric {
     symbol: String,
     metric: Metric,
