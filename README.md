@@ -1,53 +1,57 @@
 # QueryServer POC
 
-The POC introduces a simple, SQL-inspired language for querying intraday stock data.
-It returns the data as a table in either text or JSON format.
+A proof of concept (POC) introducing a simple, SQL-inspired language for querying intraday stock
+data over a time range with custom step size.  Returns data as a table, in either text or JSON format.
 
 
-## Execution
-1. Start mock GraphQl server: `cargo run --bin=gqlmock`
-2. Start query server: `RUST_LOG=debug cargo run --bin=query`
-3. Execute query with curl:
-```
-curl -X POST http://localhost:3000/query \
-  -H "Content-Type: application/json" \
-  -d '{"query": "GET APPL.max, GOOGL.open, GOOGL.volume FOR LAST 1 day STEP 1 hour", "format": "text"}'
-```
+## Quickstart
 
-It should produce a following output:
+1. **Start the mock GraphQL server** (port 8001)
+    ``` cargo run --bin=gqlmock ```
 
-```
-APPL.max  GOOGL.open  GOOGL.volume
-------------------------------------
-  110.11      127.60        147.92
-  119.88      134.85        123.87
-  112.28      119.55        136.43
-  110.20      149.27        120.85
-  139.13      129.35        134.41
-  129.25      142.93        112.16
-  102.11      134.66        118.67
-  114.77      122.68        139.47
-  135.58      132.73        118.37
-  141.93      144.95        111.46
-  101.42      140.55        136.18
-  125.01      125.24        117.78
-  116.98      146.49        139.76
-  125.26      115.47        107.11
-  133.15      126.95        108.11
-  138.32      123.57        101.56
-  146.34      101.46        100.54
-  101.59      131.02        139.24
-  149.43      142.97        124.79
-  141.54      113.95        100.72
-  112.35      118.02        146.82
-  139.82      106.29        118.84
-  124.54      104.52        146.21
-  123.56      147.30        105.74
-  100.76      101.57        147.19
+2. **Start the query server** (port 3000):
+    ``` RUST_LOG=debug cargo run --bin=query ```
+
+3. **Run a sample query:**
+    ```
+    curl -X POST http://localhost:3000/query \
+      -H "Content-Type: application/json" \
+      -d '{"query": "GET APPL.max, GOOGL.open, GOOGL.volume FOR LAST 1 day STEP 1 hour", "format": "text"}'
+    ```
+
+Sample text output:
 
 ```
+time step  APPL.max  GOOGL.open  GOOGL.v...
+---------------------------------------------
+        0   114.86     109.11    2046.05
+        1   153.54     110.65    2139.16
+        2   115.33     143.61    1587.69
+        3   140.78     149.52    2100.04
+        4   164.45     144.66    1809.34
+        5   148.83     137.22    2204.91
+        6   159.66     138.62    2098.51
+        7   133.88     136.67    2110.11
+        8   159.40     117.53    1675.00
+        9   164.24     126.36    1521.90
+       10   114.29     108.58    1821.63
+       11   116.58     121.65    2243.59
+       12   151.10     149.86    2002.58
+       13   164.82     103.26    2052.62
+       14   159.33     100.71    2150.00
+       15   118.98     107.39    2103.16
+       16   139.43     137.34    1861.30
+       17   126.42     119.04    1788.59
+       18   114.70     109.75    2184.75
+       19   134.39     103.38    2212.73
+       20   135.20     127.30    1957.11
+       21   118.40     106.30    1513.93
+       22   147.36     135.15    1863.22
+       23   146.75     110.89    1745.25
 
-and also log the GrapQl query as the server's debug:
+```
+
+Generated GraphQL query example (server log):
 
 ```
 2025-06-10T12:25:32.604435Z DEBUG request{method=POST uri=/query version=HTTP/1.1}: query::query_engine::gql_client: GraphQL Query payload: {
@@ -66,45 +70,32 @@ and also log the GrapQl query as the server's debug:
 }
 ```
 
-
-## Main components and libraries used
-- HTTP server - Axum, Tower, Tokio
-- Language parser - Pest
-- GrapQL client - graphql_client, reqwest
-- Mock GraphQL server - Axum, Tokio, async_graphql
+- The `format` parameter accepts `"json"` or `"text"` (default is `"text"`).
+- A web-based GraphQL playground is also available at `http://localhost:8001`.
 
 
-## The execution flow (optimistic path)
-1. Query is sent to async HTTP server created with Axum and Tower
-2. Query is parsed with Pest and produces `Query` structure
-3. All data targets (symbols and metrics) are extracted from query and stored in QueryPlan structure
-4. For each target a separate GraphQL query is generated
-5. Symbol and metric data are collected (asynchronously) from the mock GQL server and stored in
-   memory
-6. Program goes through all expressions from the original query and executes them on real data
-7. An output table is generated (as text or JSON)
+
+## Query language with examples
+
+The language allows for querying prices and volumes from the last `n` time units in given interval (time series data).
+I.e. to retrieve GOOGL max price (per interval) for last 3 days in 2h intervals the query should look like
+
+```GET GOOGL.max FOR LAST 3 days STEP 2 hours```
+
+The number of resulted rows is equal to `last 72 hours / 2 hours step = 36`.
+The assumption is that if there is no data for given interval the value is 0.
 
 
-## Query language
-
-Th language allows for quering prices and volumes from the last `n` time units in given interval
-(time series data). I.e. to retrieve GOOGL max price (per interval) for last 3 days in 2h intervals
-the query should look like
+### Multiple Assets, Multiple Metrics
 
 ```
-GET GOOGL.max FOR LAST 3 days STEP 2 hours
+GET TSLA.open, AAPL.volume FOR LAST 1 day STEP 1 hour
 ```
 
-The number of resulted rows is equal `last 72 hours / 2 hours step = 36`.
-If there is no data for given interval the value is 0.
+Result: TSLA opening price and volume of AAPL for each hour in the last day.
 
-Multiple assets can be fetched, each will result in a separate column:
 
-```
-GET GOOGL.open, GOOGL.volume, APPl.avg FOR LAST 10 days STEP 1 day
-```
-
-The language allows for simple expressions to manipulate the output:
+### Expressions
 
 ```
 GET
@@ -114,42 +105,85 @@ FOR LAST 30 days
 STEP 1 day
 ```
 
-The language is case-sensitive. It allows for splitting the code into multiple lines.
+### Rules / assumptions
+
+- If no data for an interval, the value is 0.
+- Multiple metrics for the same asset produce single GQL query
+- Repeated assets in multiple expressions produce only a single GQL query
+- Case-sensitive; multi-line code.
+- DSL grammar is defined in [`query.pest`](src/parser/query.pest) file
 
 
-## Key source files
 
-### Logic
+## Architecture Overview
 
-- `query_handler.rs` - glues together entire logic - request handling, parsing, data quring and
-output generation
-- `parser.rs` - code parsing logic
-- `gql_client.rs` - handling GraphQL queries
-- `table_builder.rs` - data post-processing - table generation
-- `column_builder.rs` - data post-processing - expressions execution
-- `server.rs` - mock GraphQL server
+### Major components and crates
 
-### Models
+- **HTTP server**: Axum, Tower, Tokio
+- **Language parser**: Pest
+- **GraphQL client**: graphql_client, reqwest
+- **Mock GraphQL server**: Axum, Tokio, async_graphql
 
-- `query.rs` - query (DSL) representation after parsing
-- `query_plan.rs` - symbol/metric representation for GraphQL querying
-- `table.rs` - output data representation (with text formatting)
+### Execution flow (for optimistic path)
+
+1. Query is sent to async HTTP server (Axum, Tower)
+2. Query is parsed with Pest, producing a `Query` structure
+3. Data targets (symbols and metrics) are extracted into a `QueryPlan`
+4. For each target, a separate GraphQL query is generated and sent. No duplicated data fetches are
+   guaranteed
+5. Data is collected (async) from the mock server and stored in memory
+6. Each query expression is executed on real data
+7. Output table is generated (as text or JSON)
+
+<img width="419" alt="image" src="https://github.com/user-attachments/assets/ad8fc9c3-5703-43f3-beb0-413734a4081e" />
 
 
 ## Features
 
 ### Current
 
-- async networking (request handling, GQL querying) with Tokio
-- paralllel column generation (each column in a separate task)
-- fast parsing engine
+- Async networking with Tokio (requests and GQL querying)
+- Parallel column generation (each column in a separate task)
+- Fast parsing engine
+- No panics/unwraps, robust error handling
 
 ### Easy to add
 
-- parallel data postprocessing with Rayon
-- query and output data caching
-- streaming the output data (instead of HTTP response)
+- parallel data post-processing with Rayon,
+- query/output caching
+- web client
 
-### Worth considering
+### Further considerations
+- Compile query language expressions to WebAssembly
+- streaming output data
 
-- Compiling query language expressions into WebAssembly
+
+## Key Source Files
+
+- [`query_handler.rs`](src/http_server/query_handler.rs) - glue logic: combines request handling, parsing, data querying, output generation
+- [`parser.rs`](src/parser/parser.rs) - query parsing logic (grammar file:
+[`query.pest`](src/parser/query.pest))
+- [`gql_client.rs`](src/query_engine/gql_client.rs) - GraphQL queries
+- [`table_builder.rs`](src/data/table_builder.rs) - table generation from results
+- [`column_builder.rs`](src/data/column_builder.rs) - expressions execution on columns
+- [`server.rs`](src/gql_server/server.rs) - mock GraphQL server
+
+Models:
+- [`query.rs`](src/parser/query.rs) - query (DSL) representation after parsing
+- [`query_plan.rs`](src/query_engine/query_plan.rs) - symbol/metric representation for GQL querying
+- [`table.rs`](src/data/table.rs) - output data representation and formatting
+
+## Folder structure
+
+```
+src/
+├── data/               # Post-processing: table and column builders
+├── gql_server/         # Mock GraphQL server
+├── http_server/        # Main server and glue logic
+├── parser/             # Query DSL, grammar, parser code
+├── query_engine/       # Query planning and GraphQL client
+├── error/              # Error definitions
+├── main.rs             # Entrypoint for query server
+├── config.rs           # Configuration options
+└── ...
+```

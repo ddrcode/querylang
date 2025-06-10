@@ -1,10 +1,17 @@
-use chrono::{DateTime, Utc};
-use tokio::net::TcpListener;
-use axum::{response::{Html, IntoResponse}, routing::{get, post}, serve, Router};
-use async_graphql::{http::GraphQLPlaygroundConfig, EmptyMutation, EmptySubscription, Object, Schema, SimpleObject};
+use async_graphql::{
+    EmptyMutation, EmptySubscription, Object, Schema, SimpleObject, http::GraphQLPlaygroundConfig,
+};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use axum::extract::State;
+use axum::{
+    Router,
+    response::{Html, IntoResponse},
+    routing::{get, post},
+    serve,
+};
+use chrono::{DateTime, Utc};
 use std::net::SocketAddr;
+use tokio::net::TcpListener;
 
 #[derive(SimpleObject)]
 struct MetricValue {
@@ -32,19 +39,23 @@ impl QueryRoot {
         step: String,
     ) -> Vec<MetricRecord> {
         let step_hours: u64 = step.parse().unwrap_or(1);
-        let from = DateTime::parse_from_rfc3339(&from).unwrap().with_timezone(&Utc);
-        let to = DateTime::parse_from_rfc3339(&to).unwrap().with_timezone(&Utc);
+        let from = DateTime::parse_from_rfc3339(&from)
+            .unwrap()
+            .with_timezone(&Utc);
+        let to = DateTime::parse_from_rfc3339(&to)
+            .unwrap()
+            .with_timezone(&Utc);
 
         let mut records = vec![];
         let mut current = from;
 
-        while current <= to {
+        while current < to {
             let timestamp = current.to_rfc3339();
             let values = metrics
                 .iter()
                 .map(|metric| MetricValue {
                     metric: metric.clone(),
-                    value: 100.0 + rand::random::<f32>() * 50.0,
+                    value: generate_metric_val(metric)
                 })
                 .collect();
 
@@ -56,17 +67,26 @@ impl QueryRoot {
     }
 }
 
+fn generate_metric_val(metric: &str) -> f32 {
+    let base = 100.0 + rand::random::<f32>() * 50.0;
+    match metric {
+        "max" => base * 1.12,
+        "min" => base * 0.75,
+        "volume" => base * 15.0,
+        _ => base
+    }
+}
+
 type AppSchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
 
-async fn graphql_handler(
-    State(schema): State<AppSchema>,
-    req: GraphQLRequest,
-) -> GraphQLResponse {
+async fn graphql_handler(State(schema): State<AppSchema>, req: GraphQLRequest) -> GraphQLResponse {
     schema.execute(req.into_inner()).await.into()
 }
 
 async fn graphql_playground() -> impl IntoResponse {
-    Html(async_graphql::http::playground_source(GraphQLPlaygroundConfig::new("/graphql")))
+    Html(async_graphql::http::playground_source(
+        GraphQLPlaygroundConfig::new("/graphql"),
+    ))
 }
 
 #[tokio::main]
@@ -85,4 +105,3 @@ async fn main() {
 
     serve(listener, app).await.unwrap();
 }
-

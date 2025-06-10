@@ -51,8 +51,12 @@ impl fmt::Display for Table {
         writeln!(f)?;
 
         for row in &self.rows {
-            for (i, val) in row.iter().enumerate() {
-                write!(f, "{:>width$.2}  ", val, width = col_widths[i])?;
+            for (i, value) in row.iter().enumerate() {
+                if i == 0 {
+                    write!(f, "{:>width$} ", *value as u32, width=col_widths[0])?;
+                } else {
+                    write!(f, "{:>width$.2} ", value, width=col_widths[i])?;
+                }
             }
             writeln!(f)?;
         }
