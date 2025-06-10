@@ -135,6 +135,7 @@ STEP 1 day
 6. Each query expression is executed on real data
 7. Output table is generated (as text or JSON)
 
+<img width="419" alt="image" src="https://github.com/user-attachments/assets/ad8fc9c3-5703-43f3-beb0-413734a4081e" />
 
 
 ## Features
@@ -159,7 +160,7 @@ STEP 1 day
 
 ## Key Source Files
 
-- [`query_handler.rs`](src/) - request handling, parsing, data querying, output generation
+- [`query_handler.rs`](src/http_server/query_handler.rs) - glue logic: combines request handling, parsing, data querying, output generation
 - [`parser.rs`](src/parser/parser.rs) - query parsing logic (grammar file:
 [`query.pest`](src/parser/query.pest))
 - [`gql_client.rs`](src/query_engine/gql_client.rs) - GraphQL queries
