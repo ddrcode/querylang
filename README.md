@@ -1,7 +1,7 @@
 # QueryServer POC
 
-The POC introduces a simple, SQL-inspired languae for quering intraday stock data.
-it returns the data as a table in either text or JSON format.
+The POC introduces a simple, SQL-inspired language for querying intraday stock data.
+It returns the data as a table in either text or JSON format.
 
 
 ## Execution
@@ -141,7 +141,8 @@ output generation
 ### Current
 
 - async networking (request handling, GQL querying) with Tokio
--
+- paralllel column generation (each column in a separate task)
+- fast parsing engine
 
 ### Easy to add
 
