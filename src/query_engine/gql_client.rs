@@ -7,9 +7,11 @@ use crate::{
     config,
     domain::{Metric, MetricData, SymbolData},
     error::AppError::{self, GQLError},
+    shared::QueryPlan
 };
 
-use super::{GetMetrics, QueryPlan, build_query_vars, get_metrics};
+use super::{GetMetrics, build_query_vars, get_metrics};
+
 
 /// Asynchronously fetches metric data for all targets in the provided query plan.
 /// Internally executes multiple GraphQL queries in parallel: one per target,

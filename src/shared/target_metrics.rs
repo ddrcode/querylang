@@ -3,12 +3,12 @@ use std::collections::HashSet;
 use crate::domain::Metric;
 
 #[derive(Debug, Clone)]
-pub struct DataTarget {
+pub struct TargetMetrics {
     symbol: String,
     metrics: HashSet<Metric>,
 }
 
-impl DataTarget {
+impl TargetMetrics {
     pub fn new(symbol: &str) -> Self {
         Self {
             symbol: symbol.to_string(),

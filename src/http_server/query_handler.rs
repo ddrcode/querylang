@@ -11,7 +11,8 @@ use crate::{
     data::compute_table,
     domain::{Query, Table},
     error::AppError::{self, ParseError},
-    query_engine::{QueryPlan, fetch_all_query_metrics},
+    query_engine::fetch_all_query_metrics,
+    shared::QueryPlan,
 };
 
 #[derive(Deserialize)]

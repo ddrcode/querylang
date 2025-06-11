@@ -3,7 +3,7 @@ use std::time::{Duration, SystemTime};
 use chrono::{DateTime, Utc};
 use graphql_client::GraphQLQuery;
 
-use super::DataTarget;
+use crate::shared::TargetMetrics;
 
 /// Represents the GraphQL query defined in `get_metrics.graphql`.
 /// This struct is used by the `graphql_client` module to generate the request and response types.
@@ -19,7 +19,7 @@ pub struct GetMetrics;
 /// Constructs GraphQL query variables for a given data target and time window.
 /// The variables are required to intiialize GraphQL client.
 pub fn build_query_vars(
-    target: &DataTarget,
+    target: &TargetMetrics,
     from: SystemTime,
     to: SystemTime,
     step: Duration,

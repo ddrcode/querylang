@@ -2,21 +2,21 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::domain::{Expr, Query, SymbolMetric};
 
-use super::DataTarget;
+use super::TargetMetrics;
 
 #[derive(Debug)]
 pub struct QueryPlan {
-    targets: Vec<DataTarget>,
+    targets: Vec<TargetMetrics>,
     range: Duration,
     step: Duration,
 }
 
 impl QueryPlan {
-    pub fn new(targets: Vec<DataTarget>, range: Duration, step: Duration) -> Self {
+    pub fn new(targets: Vec<TargetMetrics>, range: Duration, step: Duration) -> Self {
         Self { targets, range, step }
     }
 
-    pub fn targets(&self) -> impl Iterator<Item = &DataTarget> {
+    pub fn targets(&self) -> impl Iterator<Item = &TargetMetrics> {
         self.targets.iter()
     }
 
@@ -31,7 +31,7 @@ impl QueryPlan {
 
 impl From<&Query> for QueryPlan {
     fn from(query: &Query) -> Self {
-        let mut targets: HashMap<String, DataTarget> = HashMap::with_capacity(5);
+        let mut targets: HashMap<String, TargetMetrics> = HashMap::with_capacity(5);
 
         let mut symbols: Vec<&SymbolMetric> = Vec::new();
         for expr in query.expressions() {
@@ -41,7 +41,7 @@ impl From<&Query> for QueryPlan {
         for sm in symbols {
             let target = targets
                 .entry(sm.symbol().to_string())
-                .or_insert_with(|| DataTarget::new(sm.symbol()));
+                .or_insert_with(|| TargetMetrics::new(sm.symbol()));
             target.add_metric(sm.metric());
         }
 
