@@ -163,8 +163,8 @@ STEP 1 day
 - [`query_handler.rs`](src/api/query_handler.rs) - handles query request
 - [`parser.rs`](src/adapter/parser/parser.rs) - query parsing logic (grammar file:
 [`query.pest`](src/adapter/parser/query.pest))
-- [`gql_client.rs`](src/repository/metrics_repository_gql.rs) - GraphQL client
-- [`column_builder.rs`](src/service/query_service.rs) - main service (glue logic)
+- [`metrics_repository_gql.rs`](src/repository/metrics_repository_gql.rs) - GraphQL client
+- [`query_service.rs`](src/service/query_service.rs) - main service (glue logic)
 - [`server.rs`](src/gql_server/server.rs) - mock GraphQL server
 
 Models:
