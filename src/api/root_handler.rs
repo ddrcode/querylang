@@ -1,13 +1,6 @@
 use axum::{Json, response::IntoResponse};
-use serde::Serialize;
-
-#[derive(Serialize)]
-struct Message {
-    message: String,
-}
+use crate::shared::StatusMsg;
 
 pub async fn root_handler() -> impl IntoResponse {
-    Json(Message {
-        message: "OK".to_string(),
-    })
+    Json(StatusMsg::from_str("ok", "System is running"))
 }
