@@ -6,14 +6,41 @@ use tokio::task;
 use crate::{
     domain::{Expr, Query, SymbolData, Table},
     error::AppError,
+    repository::MetricsRepository,
+    shared::QueryPlan,
 };
 
 #[derive(Clone)]
-pub struct QueryService {}
+pub struct QueryService {
+    metrics_repo: Arc<dyn MetricsRepository>,
+}
 
 impl QueryService {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(metrics_repo: Arc<dyn MetricsRepository>) -> Self {
+        Self { metrics_repo }
+    }
+
+    pub async fn run_query(&self, query: &Query) -> Result<Table, AppError> {
+        let plan = QueryPlan::from(query);
+        let data = self.metrics_repo.get_metrics_for_query_plan(&plan).await?;
+        self.compute_table(query, data).await
+    }
+
+    async fn compute_table(&self, query: &Query, data: SymbolData) -> Result<Table, AppError> {
+        let data = Arc::new(data);
+
+        let mut columns: Vec<Vec<f32>> = vec![self.timestamps_column(&query)];
+        columns.extend(
+            self.compute_all_columns(query.expressions(), data, query.rows_count())
+                .await?,
+        );
+
+        let rows = self.transpose(columns);
+
+        let mut headers = vec!["time step".to_string()];
+        headers.extend(query.expressions().iter().map(|expr| expr.to_string()));
+
+        Ok(Table::new(headers, rows))
     }
 
     async fn compute_all_columns(
@@ -36,26 +63,9 @@ impl QueryService {
         results.into_iter().collect()
     }
 
-    pub async fn compute_table(&self, query: &Query, data: SymbolData) -> Result<Table, AppError> {
-        let data = Arc::new(data);
-
-        let mut columns: Vec<Vec<f32>> = vec![self.timestamps_column(&query)];
-        columns.extend(
-            self.compute_all_columns(query.expressions(), data, query.rows_count())
-                .await?,
-        );
-
-        let rows = self.transpose(columns);
-
-        let mut headers = vec!["time step".to_string()];
-        headers.extend(query.expressions().iter().map(|expr| expr.to_string()));
-
-        Ok(Table::new(headers, rows))
-    }
-
     /// Converts vector of columns into vector of rows
     fn transpose(&self, columns: Vec<Vec<f32>>) -> Vec<Vec<f32>> {
-        let row_count = columns[1].len();
+        let row_count = columns[0].len();
         let col_count = columns.len();
 
         let mut rows: Vec<Vec<f32>> = (0..row_count)

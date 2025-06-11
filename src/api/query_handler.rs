@@ -10,9 +10,7 @@ use crate::{
     adapter::parser::{QueryParser, Rule, parse_query},
     domain::{Query, Table},
     error::AppError::{self, ParseError},
-    query_engine::fetch_all_query_metrics,
     service::QueryService,
-    shared::QueryPlan,
 };
 
 #[derive(Deserialize)]
@@ -98,10 +96,7 @@ pub async fn query_handler(
 
 async fn execute_query(query_str: &str, service: &QueryService) -> Result<Table, AppError> {
     let parsed_query = parse(query_str)?;
-    let plan = QueryPlan::from(&parsed_query);
-    let data = fetch_all_query_metrics(&plan).await?;
-    let table = service.compute_table(&parsed_query, data).await?;
-
+    let table = service.run_query(&parsed_query).await?;
     Ok(table)
 }
 
