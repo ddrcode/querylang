@@ -1,10 +1,9 @@
 use axum::{
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{get, post},
-    Json, Router,
+    http::StatusCode, response::IntoResponse, routing::{get, post}, Extension, Json, Router
 };
 use serde::Serialize;
+
+use crate::service::QueryService;
 
 use super::handle_query;
 
@@ -20,7 +19,11 @@ async fn root() -> Result<impl IntoResponse, StatusCode> {
 }
 
 pub fn create_router() -> Router {
+
+    let query_srv = QueryService::new();
+
     Router::new()
         .route("/", get(root))
         .route("/query", post(handle_query))
+        .layer(Extension(query_srv))
 }

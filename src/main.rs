@@ -1,15 +1,14 @@
 pub mod adapter;
 pub mod config;
-pub mod data;
 pub mod domain;
 pub mod error;
-pub mod http_server;
+pub mod api;
 pub mod query_engine;
 pub mod service;
 pub mod shared;
 
 use error::AppError;
-use http_server::start_server;
+use api::start_server;
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]

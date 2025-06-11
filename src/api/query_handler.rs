@@ -1,5 +1,5 @@
 use axum::{
-    Json,
+    Extension, Json,
     http::{StatusCode, header},
     response::{IntoResponse, Response},
 };
@@ -8,10 +8,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     adapter::parser::{QueryParser, Rule, parse_query},
-    data::compute_table,
     domain::{Query, Table},
     error::AppError::{self, ParseError},
     query_engine::fetch_all_query_metrics,
+    service::QueryService,
     shared::QueryPlan,
 };
 
@@ -61,8 +61,11 @@ impl IntoResponse for QueryResultResponse {
     }
 }
 
-pub async fn handle_query(Json(req): Json<QueryReq>) -> impl IntoResponse {
-    match execute_query(&req.query).await {
+pub async fn handle_query(
+    Extension(service): Extension<QueryService>,
+    Json(req): Json<QueryReq>,
+) -> impl IntoResponse {
+    match execute_query(&req.query, &service).await {
         Ok(table) => {
             let body = match req.format {
                 OutputFormat::Text => QueryResultResponse::Text(table.to_string()),
@@ -93,11 +96,11 @@ pub async fn handle_query(Json(req): Json<QueryReq>) -> impl IntoResponse {
     }
 }
 
-async fn execute_query(query_str: &str) -> Result<Table, AppError> {
+async fn execute_query(query_str: &str, service: &QueryService) -> Result<Table, AppError> {
     let parsed_query = parse(query_str)?;
     let plan = QueryPlan::from(&parsed_query);
     let data = fetch_all_query_metrics(&plan).await?;
-    let table = compute_table(&parsed_query, data).await?;
+    let table = service.compute_table(&parsed_query, data).await?;
 
     Ok(table)
 }
