@@ -1,8 +1,5 @@
-mod server;
-mod router;
 mod query_handler;
+mod root_handler;
 
-pub use server::*;
-pub use router::*;
 pub use query_handler::*;
-
+pub use root_handler::*;

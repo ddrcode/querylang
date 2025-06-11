@@ -61,7 +61,7 @@ impl IntoResponse for QueryResultResponse {
     }
 }
 
-pub async fn handle_query(
+pub async fn query_handler(
     Extension(service): Extension<QueryService>,
     Json(req): Json<QueryReq>,
 ) -> impl IntoResponse {
