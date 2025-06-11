@@ -32,7 +32,7 @@ struct QueryRoot;
 impl QueryRoot {
     async fn get_metrics(
         &self,
-        symbol: String,
+        _symbol: String,
         metrics: Vec<String>,
         from: String,
         to: String,

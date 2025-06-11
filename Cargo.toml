@@ -14,6 +14,7 @@ path = "src/gql_server/server.rs"
 [dependencies]
 async-graphql = "7.0.17"
 async-graphql-axum = "7.0.17"
+async-trait = "0.1.88"
 axum = "0.8.4"
 chrono = "0.4.41"
 futures = "0.3.31"

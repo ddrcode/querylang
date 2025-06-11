@@ -2,12 +2,12 @@ use crate::error::AppError::{self, ParseError};
 use pest::iterators::Pair;
 use pest_derive::Parser;
 
-use super::{Expr, Metric, Operator, Query, SymbolMetric, TimeSpec, TimeUnit};
+use crate::domain::{Expr, Metric, Operator, Query, SymbolMetric, TimeSpec, TimeUnit};
 
 type ParseResult<T> = Result<T, AppError>;
 
 #[derive(Parser)]
-#[grammar = "parser/query.pest"]
+#[grammar = "adapter/parser/query.pest"]
 pub struct QueryParser;
 
 pub fn parse_query(pair: Pair<Rule>) -> ParseResult<Query> {
@@ -166,8 +166,6 @@ fn parse_time_unit(pair: Option<Pair<Rule>>) -> ParseResult<TimeUnit> {
 
 #[cfg(test)]
 mod test {
-    use crate::parser::TimeUnit;
-
     use super::*;
     use pest::Parser;
 

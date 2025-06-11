@@ -111,7 +111,7 @@ STEP 1 day
 - Multiple metrics for the same asset produce single GQL query
 - Repeated assets in multiple expressions produce only a single GQL query
 - Case-sensitive; multi-line code.
-- DSL grammar is defined in [`query.pest`](src/parser/query.pest) file
+- DSL grammar is defined in [`query.pest`](src/adapter/parser/query.pest) file
 
 
 
@@ -160,28 +160,28 @@ STEP 1 day
 
 ## Key Source Files
 
-- [`query_handler.rs`](src/http_server/query_handler.rs) - glue logic: combines request handling, parsing, data querying, output generation
-- [`parser.rs`](src/parser/parser.rs) - query parsing logic (grammar file:
-[`query.pest`](src/parser/query.pest))
-- [`gql_client.rs`](src/query_engine/gql_client.rs) - GraphQL queries
-- [`table_builder.rs`](src/data/table_builder.rs) - table generation from results
-- [`column_builder.rs`](src/data/column_builder.rs) - expressions execution on columns
+- [`query_handler.rs`](src/api/query_handler.rs) - handles query request
+- [`parser.rs`](src/adapter/parser/parser.rs) - query parsing logic (grammar file:
+[`query.pest`](src/adapter/parser/query.pest))
+- [`metrics_repository_gql.rs`](src/repository/metrics_repository_gql.rs) - GraphQL client
+- [`query_service.rs`](src/service/query_service.rs) - main service (glue logic)
 - [`server.rs`](src/gql_server/server.rs) - mock GraphQL server
 
 Models:
-- [`query.rs`](src/parser/query.rs) - query (DSL) representation after parsing
-- [`query_plan.rs`](src/query_engine/query_plan.rs) - symbol/metric representation for GQL querying
-- [`table.rs`](src/data/table.rs) - output data representation and formatting
+- [`query.rs`](src/domain/query.rs) - query (DSL) representation after parsing
+- [`query_plan.rs`](src/shared/query_plan.rs) - symbol/metric representation for GQL querying
+- [`table.rs`](src/domain/table.rs) - output data representation and formatting
 
 ## Folder structure
 
 ```
 src/
-├── data/               # Post-processing: table and column builders
-├── gql_server/         # Mock GraphQL server
-├── http_server/        # Main server and glue logic
-├── parser/             # Query DSL, grammar, parser code
-├── query_engine/       # Query planning and GraphQL client
+├── api/                # API endpoint handlers
+├── service/            # System services (called by handlers)
+├── repository/         # Data access handlers and traits
+├── adapter/parser/     # Query DSL, grammar, parser code
+├── domain/             # Domain models (Query, Table, etc)
+├── shared/             # DTO's, non-domain structs, etc
 ├── error/              # Error definitions
 ├── main.rs             # Entrypoint for query server
 ├── config.rs           # Configuration options
