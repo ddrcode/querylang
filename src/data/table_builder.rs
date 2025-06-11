@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
-use super::{Table, compute_all_columns};
-use crate::{error::AppError, parser::Query, query_engine::SymbolData};
+use super::compute_all_columns;
+use crate::{
+    domain::{Query, SymbolData, Table},
+    error::AppError,
+};
 
 /// Converts data from grapql server into an output table
 /// First it computes all columns (applying query expressions)

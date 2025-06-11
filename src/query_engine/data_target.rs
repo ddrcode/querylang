@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::parser::Metric;
+use crate::domain::Metric;
 
 #[derive(Debug, Clone)]
 pub struct DataTarget {

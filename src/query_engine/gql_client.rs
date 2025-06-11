@@ -5,14 +5,11 @@ use std::{collections::HashMap, time::SystemTime};
 
 use crate::{
     config,
+    domain::{Metric, MetricData, SymbolData},
     error::AppError::{self, GQLError},
-    parser::Metric,
 };
 
-use super::{build_query_vars, get_metrics, GetMetrics, QueryPlan};
-
-pub type MetricData = HashMap<Metric, Vec<f32>>;
-pub type SymbolData = HashMap<String, MetricData>;
+use super::{GetMetrics, QueryPlan, build_query_vars, get_metrics};
 
 /// Asynchronously fetches metric data for all targets in the provided query plan.
 /// Internally executes multiple GraphQL queries in parallel: one per target,

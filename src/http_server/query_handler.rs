@@ -1,16 +1,17 @@
 use axum::{
-    http::{header, HeaderMap, HeaderValue, StatusCode},
-    response::{IntoResponse, Response},
     Json,
+    http::{StatusCode, header},
+    response::{IntoResponse, Response},
 };
 use pest::Parser;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    data::{compute_table, Table},
+    adapter::parser::{QueryParser, Rule, parse_query},
+    data::compute_table,
+    domain::{Query, Table},
     error::AppError::{self, ParseError},
-    parser::{parse_query, Query, QueryParser, Rule},
-    query_engine::{fetch_all_query_metrics, QueryPlan},
+    query_engine::{QueryPlan, fetch_all_query_metrics},
 };
 
 #[derive(Deserialize)]

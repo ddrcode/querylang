@@ -1,9 +1,10 @@
 pub mod http_server;
 pub mod error;
-pub mod parser;
+pub mod adapter;
 pub mod query_engine;
 pub mod data;
 pub mod config;
+pub mod domain;
 
 use http_server::start_server;
 use error::AppError;

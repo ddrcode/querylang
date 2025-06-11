@@ -2,7 +2,7 @@ use pest;
 use reqwest;
 use thiserror::Error;
 
-use crate::parser::Rule;
+use crate::adapter::parser::Rule;
 
 #[derive(Debug, Error)]
 #[non_exhaustive]

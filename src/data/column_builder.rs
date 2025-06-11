@@ -2,7 +2,10 @@ use futures::future::try_join_all;
 use std::sync::Arc;
 use tokio::task;
 
-use crate::{error::AppError, parser::Expr, query_engine::SymbolData};
+use crate::{
+    domain::{Expr, SymbolData},
+    error::AppError,
+};
 
 pub fn create_column(expr: &Expr, data: &SymbolData, size: usize) -> Result<Vec<f32>, AppError> {
     let col = match expr {

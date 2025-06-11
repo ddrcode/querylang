@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
-use crate::parser::{Expr, Query, SymbolMetric};
+use crate::domain::{Expr, Query, SymbolMetric};
 
 use super::DataTarget;
 
