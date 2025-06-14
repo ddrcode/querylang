@@ -1,46 +1,36 @@
-use crate::error::AppError::{self, ParseError};
+use super::error::ParseError;
 use pest::iterators::Pair;
 use pest_derive::Parser;
 
-use crate::domain::{Expr, Metric, Operator, Query, SymbolMetric, TimeSpec, TimeUnit};
+use crate::model::{Expr, Metric, Operator, Query, SymbolMetric, TimeSpec, TimeUnit};
 
-type ParseResult<T> = Result<T, AppError>;
+type ParseResult<T> = Result<T, ParseError>;
 
 #[derive(Parser)]
-#[grammar = "adapter/parser/query.pest"]
+#[grammar = "src/query.pest"]
 pub struct QueryParser;
 
 pub fn parse_query(pair: Pair<Rule>) -> ParseResult<Query> {
     assert_eq!(pair.as_rule(), Rule::query);
     let mut pairs = pair.into_inner();
 
-    let exprs = parse_expr_list(
-        pairs
-            .next()
-            .ok_or(ParseError("Missing expressions list".to_string()))?,
-    )?;
-    let for_clause = parse_for_clause(
-        pairs
-            .next()
-            .ok_or(ParseError("Missing time range".to_string()))?,
-    )?;
+    let exprs = parse_expr_list(pairs.next())?;
+    let for_clause = parse_for_clause(pairs.next())?;
     let step_clause = parse_step_clause(
         pairs
             .next()
-            .ok_or(ParseError("Missing interval".to_string()))?,
     )?;
 
     Ok(Query::new(exprs, for_clause, step_clause))
 }
 
-fn parse_expr_list(pair: Pair<Rule>) -> ParseResult<Vec<Expr>> {
+fn parse_expr_list(pair: Option<Pair<Rule>>) -> ParseResult<Vec<Expr>> {
+    let pair = pair.ok_or(ParseError::MissingPair("expr_list"))?;
     pair.into_inner().map(parse_expr).collect()
 }
 
-fn parse_expr(pair: Pair<Rule>) -> Result<Expr, AppError> {
-    if pair.as_rule() != Rule::expr {
-        return Err(ParseError("Expected Rule::expr".to_string()));
-    }
+fn parse_expr(pair: Pair<Rule>) -> Result<Expr, ParseError> {
+    expect_rule(&pair, Rule::expr)?;
 
     let mut inner = pair.into_inner();
     let mut left = parse_term(inner.next())?;
@@ -52,7 +42,7 @@ fn parse_expr(pair: Pair<Rule>) -> Result<Expr, AppError> {
                 let op = Operator::try_from(op_pair.as_str())?;
                 left = Expr::Binary(Box::new(left), op, Box::new(right));
             }
-            _ => return Err(ParseError("Unexpected rule in expr".to_string())),
+            other => return Err(ParseError::InvalidRule("expr".into(), format!("{other:?}"))),
         }
     }
 
@@ -60,7 +50,7 @@ fn parse_expr(pair: Pair<Rule>) -> Result<Expr, AppError> {
 }
 
 fn parse_term(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
-    let pair = pair.ok_or(ParseError("Missing term".to_string()))?;
+    let pair = pair.ok_or(ParseError::MissingPair("term"))?;
 
     let mut inner = pair.into_inner();
     let next_pair = inner.next();
@@ -74,7 +64,12 @@ fn parse_term(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
                 let right = parse_factor(next_pair)?;
                 left = Expr::Binary(Box::new(left), op, Box::new(right));
             }
-            _ => return Err(ParseError("Unexpected rule in term".to_string())),
+            other => {
+                return Err(ParseError::InvalidRule(
+                    "term_op".into(),
+                    format!("{other:?}"),
+                ));
+            }
         }
     }
 
@@ -82,14 +77,11 @@ fn parse_term(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
 }
 
 fn parse_factor(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
-    let pair = pair.ok_or(ParseError("Missing factor".to_string()))?;
-
-    if pair.as_rule() != Rule::factor {
-        return Err(ParseError("Expected Rule::factor".to_string()));
-    }
+    let pair = pair.ok_or(ParseError::MissingPair("factor"))?;
+    expect_rule(&pair, Rule::factor)?;
 
     let mut inner = pair.into_inner();
-    let pair = inner.next().ok_or(ParseError("Empty factor".to_string()))?;
+    let pair = inner.next().ok_or(ParseError::MissingPair("factor"))?;
 
     let val = match pair.as_rule() {
         Rule::data => {
@@ -100,15 +92,19 @@ fn parse_factor(pair: Option<Pair<Rule>>) -> ParseResult<Expr> {
         }
         Rule::value => Expr::Value(parse_value(Some(pair))?),
         Rule::expr => parse_expr(pair)?, // for grouped expressions: (a + b)
-        _ => return Err(ParseError("Unexpected rule in factor".to_string())),
+        other => {
+            return Err(ParseError::InvalidRule(
+                "data, value or expr".into(),
+                format!("{other:?}"),
+            ));
+        }
     };
     Ok(val)
 }
 
-fn parse_step_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
-    if pair.as_rule() != Rule::step_clause {
-        return Err(ParseError("Expected Rule::step_clause".to_string()));
-    }
+fn parse_step_clause(pair: Option<Pair<Rule>>) -> ParseResult<TimeSpec> {
+    let pair = pair.ok_or(ParseError::MissingPair("step_clause"))?;
+    expect_rule(&pair, Rule::step_clause)?;
 
     let mut inner = pair.into_inner();
     let value = parse_value(inner.next())?;
@@ -117,10 +113,9 @@ fn parse_step_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
     Ok(TimeSpec::new(value, unit))
 }
 
-fn parse_for_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
-    if pair.as_rule() != Rule::for_clause {
-        return Err(ParseError("Expected Rule::for_clause".to_string()));
-    }
+fn parse_for_clause(pair: Option<Pair<Rule>>) -> ParseResult<TimeSpec> {
+    let pair = pair.ok_or(ParseError::MissingPair("for_clause"))?;
+    expect_rule(&pair, Rule::for_clause)?;
 
     let mut inner = pair.into_inner();
     let value = parse_value(inner.next())?;
@@ -130,38 +125,42 @@ fn parse_for_clause(pair: Pair<Rule>) -> Result<TimeSpec, AppError> {
 }
 
 fn parse_symbol(pair: Option<Pair<Rule>>) -> ParseResult<String> {
-    let val = pair.ok_or(ParseError("Empty symbol".to_string()))?;
-    if val.as_rule() != Rule::symbol {
-        return Err(ParseError("Expected Rule::symbol".to_string()));
-    }
+    let val = pair.ok_or(ParseError::MissingPair("symbol"))?;
+    expect_rule(&val, Rule::symbol)?;
     Ok(val.as_str().to_string())
 }
 
 fn parse_metric(pair: Option<Pair<Rule>>) -> ParseResult<Metric> {
-    let val = pair.ok_or(ParseError("Empty metric".to_string()))?;
-    if val.as_rule() != Rule::metric {
-        return Err(ParseError("Expected Rule::metric".to_string()));
-    }
+    let val = pair.ok_or(ParseError::MissingPair("metric"))?;
+    expect_rule(&val, Rule::metric)?;
     Metric::try_from(val.as_str())
 }
 
 fn parse_value(pair: Option<Pair<Rule>>) -> ParseResult<u32> {
-    let val = pair.ok_or(ParseError("Empty value".to_string()))?;
-    if val.as_rule() != Rule::value {
-        return Err(ParseError("Expected Rule::value".to_string()));
-    }
-    val.as_str()
-        .to_string()
+    let val = pair.ok_or(ParseError::MissingPair("value"))?;
+    expect_rule(&val, Rule::value)?;
+    let valstr = val.as_str().to_string();
+
+    valstr
         .parse()
-        .map_err(|_| ParseError("Error parsing value".to_string()))
+        .map_err(|_| ParseError::InvalidValue(valstr, "value".into()))
 }
 
 fn parse_time_unit(pair: Option<Pair<Rule>>) -> ParseResult<TimeUnit> {
-    let val = pair.ok_or(ParseError("Empty time unit".to_string()))?;
-    if val.as_rule() != Rule::time_unit {
-        return Err(ParseError("Expected Rule::value".to_string()));
-    }
+    let val = pair.ok_or(ParseError::MissingPair("timeunit"))?;
+    expect_rule(&val, Rule::time_unit)?;
     TimeUnit::try_from(val.as_str())
+}
+
+fn expect_rule(pair: &Pair<Rule>, expected: Rule) -> ParseResult<()> {
+    let rule = pair.as_rule();
+    if rule != expected {
+        return Err(ParseError::InvalidRule(
+            format!("{expected:?}"),
+            format!("{rule:?}"),
+        ));
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -226,7 +225,7 @@ mod test {
     fn test_for_clause() {
         let input = r"FOR LAST 10 days";
         let parsed = parse(Rule::for_clause, input);
-        let time = parse_for_clause(parsed).unwrap();
+        let time = parse_for_clause(Some(parsed)).unwrap();
         assert_eq!(10, time.value());
         assert_eq!(TimeUnit::Day, time.unit());
     }
@@ -236,7 +235,7 @@ mod test {
         let input = r"STEP 1 day";
         let parsed = parse(Rule::step_clause, input);
         debug_pair(&parsed, 0);
-        let step = parse_step_clause(parsed).unwrap();
+        let step = parse_step_clause(Some(parsed)).unwrap();
         assert_eq!(1, step.value());
         assert_eq!(TimeUnit::Day, step.unit());
     }

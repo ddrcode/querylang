@@ -1,5 +1,5 @@
 use super::TimeUnit;
-use crate::error::AppError::{self, ParseError};
+use crate::error::ParseError;
 use std::{fmt, time::Duration};
 
 #[derive(Debug)]
@@ -30,17 +30,17 @@ impl TimeSpec {
 }
 
 impl TryFrom<(&str, &str)> for TimeSpec {
-    type Error = AppError;
+    type Error = ParseError;
 
     fn try_from(value: (&str, &str)) -> Result<Self, Self::Error> {
         let spec = Self {
             value: String::from(value.0)
                 .parse()
-                .map_err(|_| ParseError("Error parsing value in TimeRange".to_string()))?,
+                .map_err(|_| ParseError::InvalidValue(value.0.into(), "time_spec".into()))?,
             unit: TimeUnit::try_from(value.1)?,
         };
         if spec.value < 1 {
-            return Err(ParseError("Time value must be > 0".to_string()));
+            return Err(ParseError::InvalidValue(value.0.into(), "time_spec".into()));
         }
         Ok(spec)
     }

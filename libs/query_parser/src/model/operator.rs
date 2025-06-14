@@ -1,4 +1,4 @@
-use crate::error::AppError::{self, ParseError};
+use crate::error::ParseError;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -22,7 +22,7 @@ impl Operator {
 }
 
 impl TryFrom<&str> for Operator {
-    type Error = AppError;
+    type Error = ParseError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let op = match value {
@@ -30,7 +30,7 @@ impl TryFrom<&str> for Operator {
             "-" => Operator::Sub,
             "*" => Operator::Mul,
             "/" => Operator::Div,
-            op => return Err(ParseError(format!("Unknown operator: {op}"))),
+            op => return Err(ParseError::InvalidValue(op.into(), "operator".into())),
         };
         Ok(op)
     }

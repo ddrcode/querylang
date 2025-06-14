@@ -1,0 +1,11 @@
+[package]
+name = "metrics-api"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+async-graphql-axum = "7.0.17"
+axum = "0.8.4"
+chrono = "0.4.41"
+tokio = "1.45.1"
+

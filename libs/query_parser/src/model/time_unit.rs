@@ -1,4 +1,4 @@
-use crate::error::AppError::{self, ParseError};
+use crate::error::ParseError;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -8,7 +8,7 @@ pub enum TimeUnit {
 }
 
 impl TryFrom<&str> for TimeUnit {
-    type Error = AppError;
+    type Error = ParseError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let val = match value {
@@ -16,7 +16,7 @@ impl TryFrom<&str> for TimeUnit {
             "days" => TimeUnit::Day,
             "hour" => TimeUnit::Hour,
             "hours" => TimeUnit::Hour,
-            other => return Err(ParseError(format!("Unrecognised time unit: {other}"))),
+            other => return Err(ParseError::InvalidValue(other.into(), "time_unit".into())),
         };
         Ok(val)
     }

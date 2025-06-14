@@ -1,4 +1,4 @@
-use crate::error::AppError;
+use crate::error::ParseError;
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
@@ -13,7 +13,7 @@ pub enum Metric {
 }
 
 impl TryFrom<&str> for Metric {
-    type Error = AppError;
+    type Error = ParseError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let val = match value {
@@ -23,7 +23,7 @@ impl TryFrom<&str> for Metric {
             "open" => Metric::Open,
             "close" => Metric::Close,
             "avg" => Metric::Avg,
-            other => return Err(AppError::DataError(format!("Unknown metric: {other}"))),
+            other => return Err(ParseError::InvalidValue(other.into(), "metric".into())),
         };
         Ok(val)
     }
