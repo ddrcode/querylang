@@ -4,12 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow.workspace = true
 async-graphql = "7.0.17"
 async-graphql-axum = "7.0.17"
 async-trait = { workspace = true }
 axum = { workspace = true }
 chrono = "0.4.41"
+common = { path = "../../libs/common" }
 rand = "0.9.1"
+serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 

@@ -9,7 +9,8 @@ use axum::{
     routing::{get, post},
     serve,
 };
-use std::{net::SocketAddr, sync::Arc};
+use common::utils::load_config;
+use std::sync::Arc;
 use tokio::net::TcpListener;
 
 use crate::{
@@ -19,10 +20,13 @@ use crate::{
     },
     repository::MetricsRepositoryMock,
     service::MetricsService,
+    shared::Config,
 };
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), anyhow::Error> {
+    let config = load_config::<Config>(env!("CARGO_MANIFEST_DIR"))?;
+
     let mock_repo = MetricsRepositoryMock::new();
     let metrics_srv = MetricsService::new(Arc::new(mock_repo));
     let schema = build_schema(Arc::new(metrics_srv));
@@ -32,10 +36,9 @@ async fn main() {
         .route("/graphql", post(graphql_handler))
         .with_state(schema);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8001));
-    let listener = TcpListener::bind(addr).await.unwrap();
-
-    println!("Running at http://{}/graphql", addr);
+    let listener = TcpListener::bind(config.metrics_server).await?;
 
     serve(listener, app).await.unwrap();
+
+    Ok(())
 }

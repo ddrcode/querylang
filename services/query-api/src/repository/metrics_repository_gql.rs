@@ -7,7 +7,6 @@ use reqwest;
 use std::{collections::HashMap, time::Duration};
 
 use crate::{
-    config,
     domain::{MetricData, SymbolData},
     error::AppError::{self, GQLError},
     repository::MetricsRepository,
@@ -26,12 +25,14 @@ pub struct GetMetrics;
 
 pub struct MetricsRepositoryGql {
     client: reqwest::Client,
+    graphql_endpoint: String
 }
 
 impl MetricsRepositoryGql {
-    pub fn new() -> Self {
+    pub fn new(graphql_endpoint: &str) -> Self {
         Self {
             client: reqwest::Client::new(),
+            graphql_endpoint: graphql_endpoint.into()
         }
     }
 
@@ -70,7 +71,7 @@ impl MetricsRepositoryGql {
 
         let res = self
             .client
-            .post(config::GRAPHQL_SERVER)
+            .post(self.graphql_endpoint.clone())
             .json(&request_body)
             .send()
             .await?

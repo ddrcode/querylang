@@ -1,6 +1,7 @@
 use std::fmt;
 use serde::Serialize;
-use crate::config;
+
+use crate::shared::MAX_HEADER_WIDTH;
 
 #[derive(Debug, Serialize)]
 pub struct Table {
@@ -26,7 +27,7 @@ impl fmt::Display for Table {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let display_headers: Vec<String> = self
             .headers()
-            .map(|h| shorten_name(h, config::MAX_HEADER_WIDTH))
+            .map(|h| shorten_name(h, MAX_HEADER_WIDTH))
             .collect();
 
         let mut col_widths: Vec<usize> = display_headers.iter().map(|h| h.len()).collect();
