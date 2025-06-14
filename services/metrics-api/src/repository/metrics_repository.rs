@@ -1,4 +1,4 @@
-use crate::shared::MetricRecord;
+use crate::{error::MetricsApiError, shared::MetricRecord};
 
 #[async_trait::async_trait]
 pub trait MetricsRepository: Send + Sync {
@@ -9,5 +9,5 @@ pub trait MetricsRepository: Send + Sync {
         from: String,
         to: String,
         step: String,
-    ) -> Vec<MetricRecord>;
+    ) -> Result<Vec<MetricRecord>, MetricsApiError>;
 }

@@ -1,4 +1,4 @@
-use crate::{repository::MetricsRepository, shared::MetricRecord};
+use crate::{error::MetricsApiError, repository::MetricsRepository, shared::MetricRecord};
 use std::sync::Arc;
 
 pub struct MetricsService {
@@ -17,7 +17,7 @@ impl MetricsService {
         from: String,
         to: String,
         step: String,
-    ) -> Vec<MetricRecord> {
+    ) -> Result<Vec<MetricRecord>, MetricsApiError> {
         self.metrics_repo
             .get_metrics(symbol, metrics, from, to, step)
             .await

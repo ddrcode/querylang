@@ -1,8 +1,7 @@
 use chrono::{DateTime, Utc};
 
 use crate::{
-    repository::MetricsRepository,
-    shared::{MetricRecord, MetricValue},
+    error::MetricsApiError, repository::MetricsRepository, shared::{MetricRecord, MetricValue}
 };
 
 pub struct MetricsRepositoryMock {}
@@ -32,7 +31,7 @@ impl MetricsRepository for MetricsRepositoryMock {
         from: String,
         to: String,
         step: String,
-    ) -> Vec<MetricRecord> {
+    ) -> Result<Vec<MetricRecord>, MetricsApiError> {
         let step_hours: u64 = step.parse().unwrap_or(1);
         let from = DateTime::parse_from_rfc3339(&from)
             .unwrap()
@@ -58,6 +57,6 @@ impl MetricsRepository for MetricsRepositoryMock {
             current += chrono::Duration::hours(step_hours as i64);
         }
 
-        records
+        Ok(records)
     }
 }

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_graphql::Object;
 
-use crate::{service::MetricsService, shared::{MetricRecord}};
+use crate::{error::MetricsApiError, service::MetricsService, shared::MetricRecord};
 
 #[derive(Default)]
 pub struct QueryRoot;
@@ -17,7 +17,7 @@ impl QueryRoot {
         from: String,
         to: String,
         step: String,
-    ) -> Vec<MetricRecord> {
+    ) -> Result<Vec<MetricRecord>, MetricsApiError> {
         let service = ctx.data::<Arc<MetricsService>>().unwrap();
         service.get_metrics_for_symbol(symbol, metrics, from, to, step).await
     }

@@ -1,7 +1,8 @@
 pub mod api;
+pub mod error;
+pub mod repository;
 pub mod service;
 pub mod shared;
-pub mod repository;
 
 use axum::{
     Router,
@@ -15,7 +16,9 @@ use crate::{
     api::{
         graphql::{build_schema, graphql_handler},
         root_handler,
-    }, repository::MetricsRepositoryMock, service::MetricsService
+    },
+    repository::MetricsRepositoryMock,
+    service::MetricsService,
 };
 
 #[tokio::main]
