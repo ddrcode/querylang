@@ -23,7 +23,12 @@ impl TryFrom<&str> for Metric {
             "open" => Metric::Open,
             "close" => Metric::Close,
             "avg" => Metric::Avg,
-            other => return Err(ParseError::InvalidValue(other.into(), "metric".into())),
+            other => {
+                return Err(ParseError::InvalidValue(
+                    other.to_string().into(),
+                    "metric".into(),
+                ));
+            }
         };
         Ok(val)
     }

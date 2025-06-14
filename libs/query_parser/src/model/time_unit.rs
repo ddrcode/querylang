@@ -16,7 +16,12 @@ impl TryFrom<&str> for TimeUnit {
             "days" => TimeUnit::Day,
             "hour" => TimeUnit::Hour,
             "hours" => TimeUnit::Hour,
-            other => return Err(ParseError::InvalidValue(other.into(), "time_unit".into())),
+            other => {
+                return Err(ParseError::InvalidValue(
+                    other.to_string().into(),
+                    "time_unit".into(),
+                ));
+            }
         };
         Ok(val)
     }

@@ -34,13 +34,16 @@ impl TryFrom<(&str, &str)> for TimeSpec {
 
     fn try_from(value: (&str, &str)) -> Result<Self, Self::Error> {
         let spec = Self {
-            value: String::from(value.0)
-                .parse()
-                .map_err(|_| ParseError::InvalidValue(value.0.into(), "time_spec".into()))?,
+            value: String::from(value.0).parse().map_err(|_| {
+                ParseError::InvalidValue(value.0.to_string().into(), "time_spec".into())
+            })?,
             unit: TimeUnit::try_from(value.1)?,
         };
         if spec.value < 1 {
-            return Err(ParseError::InvalidValue(value.0.into(), "time_spec".into()));
+            return Err(ParseError::InvalidValue(
+                value.0.to_string().into(),
+                "time_spec".into(),
+            ));
         }
         Ok(spec)
     }

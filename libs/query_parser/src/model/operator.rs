@@ -30,7 +30,12 @@ impl TryFrom<&str> for Operator {
             "-" => Operator::Sub,
             "*" => Operator::Mul,
             "/" => Operator::Div,
-            op => return Err(ParseError::InvalidValue(op.into(), "operator".into())),
+            op => {
+                return Err(ParseError::InvalidValue(
+                    op.to_string().into(),
+                    "operator".into(),
+                ));
+            }
         };
         Ok(op)
     }
