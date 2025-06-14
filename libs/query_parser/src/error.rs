@@ -13,13 +13,8 @@ pub enum ParseError {
     #[error("Invalid value: {0} for {1} rule ")]
     InvalidValue(String, String),
 
-    #[error("Pest error")]
-    PestError(pest::error::Error<Rule>),
+    #[error("Internal parser error: {0}")]
+    PestError(#[from] pest::error::Error<Rule>),
 }
 
-impl From<pest::error::Error<Rule>> for ParseError {
-    fn from(err: pest::error::Error<Rule>) -> Self {
-        Self::PestError(err)
-    }
-}
 

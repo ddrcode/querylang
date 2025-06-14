@@ -1,15 +1,13 @@
-use pest;
 use reqwest;
 use thiserror::Error;
-
-use crate::adapter::parser::Rule;
+use query_parser;
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum AppError {
 
     #[error("Query parse error: {0}")]
-    ParseError(String),
+    ParseError(#[from] query_parser::ParseError),
 
     #[error("GraphQL error: {0}")]
     GQLError(String),
@@ -19,12 +17,6 @@ pub enum AppError {
 
     #[error("Data processing error: {0}")]
     DataError(String)
-}
-
-impl From<pest::error::Error<Rule>> for AppError {
-    fn from(err: pest::error::Error<Rule>) -> Self {
-        AppError::ParseError(err.to_string())
-    }
 }
 
 impl From<reqwest::Error> for AppError {

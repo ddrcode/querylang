@@ -1,5 +1,5 @@
 use axum::{Json, response::IntoResponse};
-use crate::shared::StatusMsg;
+use common::shared::StatusMsg;
 
 pub async fn root_handler() -> impl IntoResponse {
     Json(StatusMsg::from_str("ok", "System is running"))

@@ -3,16 +3,15 @@ use axum::{
     http::{StatusCode, header},
     response::{IntoResponse, Response},
 };
-use pest::Parser;
 use serde::Deserialize;
 
 use crate::{
-    adapter::parser::{QueryParser, Rule, parse_query},
-    domain::{Query, Table},
-    error::AppError::{self, ParseError},
+    domain::Table,
+    error::AppError,
     service::QueryService,
-    shared::StatusMsg,
 };
+use query_parser::{self, Query, QueryParser, Rule, parse_query};
+use common::shared::StatusMsg;
 
 #[derive(Deserialize)]
 pub struct QueryReq {
@@ -91,6 +90,6 @@ async fn execute_query(query_str: &str, service: &QueryService) -> Result<Table,
 
 fn parse(query: &str) -> Result<Query, AppError> {
     let mut parsed = QueryParser::parse(Rule::query, query)?;
-    let next = parsed.next().ok_or(ParseError("empty query".to_string()))?;
-    parse_query(next)
+    let next = parsed.next().ok_or(query_p("empty query".to_string()))?;
+    Ok(parse_query(next)?)
 }
