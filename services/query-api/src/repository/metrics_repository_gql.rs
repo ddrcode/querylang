@@ -2,12 +2,13 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use futures::future::try_join_all;
 use graphql_client::GraphQLQuery;
+use query_parser::Metric;
 use reqwest;
 use std::{collections::HashMap, time::Duration};
 
 use crate::{
     config,
-    domain::{Metric, MetricData, SymbolData},
+    domain::{MetricData, SymbolData},
     error::AppError::{self, GQLError},
     repository::MetricsRepository,
     shared::{DateRange, QueryPlan, TargetMetrics},

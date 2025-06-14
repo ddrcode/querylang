@@ -1,6 +1,6 @@
 use std::{collections::HashMap, time::Duration};
 
-use crate::domain::{Expr, Query, SymbolMetric};
+use query_parser::{Expr, Query, SymbolMetric};
 
 use super::TargetMetrics;
 
@@ -13,7 +13,11 @@ pub struct QueryPlan {
 
 impl QueryPlan {
     pub fn new(targets: Vec<TargetMetrics>, range: Duration, step: Duration) -> Self {
-        Self { targets, range, step }
+        Self {
+            targets,
+            range,
+            step,
+        }
     }
 
     pub fn targets(&self) -> impl Iterator<Item = &TargetMetrics> {

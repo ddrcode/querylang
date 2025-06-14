@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
 use futures::future::try_join_all;
+use query_parser::{Expr, Query};
 use tokio::task;
 
 use crate::{
-    domain::{Expr, Query, SymbolData, Table},
+    domain::{SymbolData, Table},
     error::AppError,
     repository::MetricsRepository,
     shared::QueryPlan,

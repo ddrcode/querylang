@@ -5,13 +5,9 @@ use axum::{
 };
 use serde::Deserialize;
 
-use crate::{
-    domain::Table,
-    error::AppError,
-    service::QueryService,
-};
-use query_parser::{self, Query, QueryParser, Rule, parse_query};
+use crate::{domain::Table, error::AppError, service::QueryService};
 use common::shared::StatusMsg;
+use query_parser::parse_query;
 
 #[derive(Deserialize)]
 pub struct QueryReq {
@@ -83,13 +79,7 @@ pub async fn query_handler(
 }
 
 async fn execute_query(query_str: &str, service: &QueryService) -> Result<Table, AppError> {
-    let parsed_query = parse(query_str)?;
+    let parsed_query = parse_query(query_str)?;
     let table = service.run_query(&parsed_query).await?;
     Ok(table)
-}
-
-fn parse(query: &str) -> Result<Query, AppError> {
-    let mut parsed = QueryParser::parse(Rule::query, query)?;
-    let next = parsed.next().ok_or(query_p("empty query".to_string()))?;
-    Ok(parse_query(next)?)
 }

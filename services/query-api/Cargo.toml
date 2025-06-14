@@ -3,14 +3,6 @@ name = "query-api"
 version = "0.1.0"
 edition = "2024"
 
-[[bin]]
-name = "query"
-path = "src/main.rs"
-
-[[bin]]
-name = "gqlmock"
-path = "src/gql_server/server.rs"
-
 [dependencies]
 async-trait = "0.1.88"
 axum = "0.8.4"
