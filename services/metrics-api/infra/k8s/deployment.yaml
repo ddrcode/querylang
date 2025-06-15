@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-api
+  template:
+    metadata:
+      labels:
+        app: metrics-api
+    spec:
+      containers:
+        - name: metrics-api
+          image: metrics-api:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: RUST_LOG
+              value: debug
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: metrics-api-config
+            items:
+              - key: default.toml
+                path: default.toml
+
