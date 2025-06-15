@@ -7,13 +7,17 @@ data over a time range with custom step size.  Returns data as a table, in eithe
 ## Quickstart
 
 1. **Start the mock GraphQL server** (port 8001)
-    ``` cargo run --bin=gqlmock ```
+    ```bash
+    cargo run --bin=metrics-api
+    ```
 
 2. **Start the query server** (port 3000):
-    ``` RUST_LOG=debug cargo run --bin=query ```
+    ```bash
+    RUST_LOG=debug cargo run --bin=query-api
+    ```
 
 3. **Run a sample query:**
-    ```
+    ```bash
     curl -X POST http://localhost:3000/query \
       -H "Content-Type: application/json" \
       -d '{"query": "GET APPL.max, GOOGL.open, GOOGL.volume FOR LAST 1 day STEP 1 hour", "format": "text"}'
@@ -111,7 +115,7 @@ STEP 1 day
 - Multiple metrics for the same asset produce single GQL query
 - Repeated assets in multiple expressions produce only a single GQL query
 - Case-sensitive; multi-line code.
-- DSL grammar is defined in [`query.pest`](src/adapter/parser/query.pest) file
+- DSL grammar is defined in [`query.pest`](libs/query_parser/src/grammar/query.pest) file
 
 
 
@@ -160,30 +164,57 @@ STEP 1 day
 
 ## Key Source Files
 
-- [`query_handler.rs`](src/api/query_handler.rs) - handles query request
-- [`parser.rs`](src/adapter/parser/parser.rs) - query parsing logic (grammar file:
-[`query.pest`](src/adapter/parser/query.pest))
-- [`metrics_repository_gql.rs`](src/repository/metrics_repository_gql.rs) - GraphQL client
-- [`query_service.rs`](src/service/query_service.rs) - main service (glue logic)
-- [`server.rs`](src/gql_server/server.rs) - mock GraphQL server
+- [`query_handler.rs`](services/query-api/src/api/query_handler.rs) - handles query request
+- [`builders.rs`](libs/query_parser/src/builders.rs) - main parsing logic (visitors)
+- [`query.pest`](libs/query_parser/src/grammar/query.pest) - query language grammar
+- [`metrics_repository_gql.rs`](services/query-api/src/repository/metrics_repository_gql.rs) - GraphQL client
+- [`query_service.rs`](services/query-api/src/service/query_service.rs) - main service (glue logic)
 
 Models:
-- [`query.rs`](src/domain/query.rs) - query (DSL) representation after parsing
-- [`query_plan.rs`](src/shared/query_plan.rs) - symbol/metric representation for GQL querying
-- [`table.rs`](src/domain/table.rs) - output data representation and formatting
+- [`query.rs`](libs/query_parser/src/model/query.rs) - query (DSL) representation after parsing
+- [`query_plan.rs`](services/query-api/src/shared/query_plan.rs) - symbol/metric representation for GQL querying
+- [`table.rs`](services/query-api/src/domain/table.rs) - output data representation and formatting
 
-## Folder structure
+## Project structure
+
+This is a multi-crate project, that follows microservices architecture
+with shared libs. Each microservice is organised with typical for Rust project
+api-service-repository-domain pattern (and folder structure).
 
 ```
-src/
-├── api/                # API endpoint handlers
-├── service/            # System services (called by handlers)
-├── repository/         # Data access handlers and traits
-├── adapter/parser/     # Query DSL, grammar, parser code
-├── domain/             # Domain models (Query, Table, etc)
-├── shared/             # DTO's, non-domain structs, etc
-├── error/              # Error definitions
-├── main.rs             # Entrypoint for query server
-├── config.rs           # Configuration options
-└── ...
+project-root/
+├── Cargo.toml                  # Top-level workspace manifest
+├── libs/                       # Shared libraries and utilities (reused across services)
+│   ├── common/                 # Types, config helpers, error handling, utilities (shared logic)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── shared/         # Shared models (DTOs, etc)
+│   │       └── utils/          # Shared utility functions (i.e. config loader)
+│   └── query_parser/           # Query language parser as a reusable library
+│       ├── Cargo.toml
+│       └── src/
+│           ├── lib.rs
+│           ├── grammar/        # Grammar files (.pest)
+│           ├── model/          # AST/data types
+│           ├── parser.rs       # Parser logic
+│           ├── rule_parsers.rs # Parsers for individual AST rules (i.e. expression, time, etc.)
+│           └── builders.rs     # Visitor/builders for AST
+├── services/                   # All microservices
+│   ├── query-api/              # Main query API service (HTTP, handles DSL queries)
+│   │   ├── Cargo.toml
+│   │   ├── config/             # Service-specific configuration files (e.g., dev.toml, prod.toml)
+│   │   └── src/
+│   │       ├── main.rs
+│   │       ├── api/            # HTTP handlers (Axum, etc)
+│   │       ├── service/        # Business logic (query processing, table building)
+│   │       ├── repository/     # Data sources: GraphQL, etc.
+│   │       ├── shared/         # Non-domain models (DTOs, etc.)
+│   │       └── domain/         # Service-specific domain models (i.e Table)
+│   └── metrics-api/            # Mock GraphQL server providing metrics data
+│       ├── Cargo.toml
+│       ├── config/            # Service-specific configuration files
+│       └── src/
+│           ├── main.rs
+│           └── ...            # Service implementation
 ```
