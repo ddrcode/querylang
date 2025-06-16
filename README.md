@@ -6,6 +6,8 @@ data over a time range with custom step size.  Returns data as a table, in eithe
 
 ## Quickstart
 
+### Local
+
 1. **Start the mock GraphQL server** (port 8001)
     ```bash
     cargo run --bin=metrics-api
@@ -22,6 +24,15 @@ data over a time range with custom step size.  Returns data as a table, in eithe
       -H "Content-Type: application/json" \
       -d '{"query": "GET APPL.max, GOOGL.open, GOOGL.volume FOR LAST 1 day STEP 1 hour", "format": "text"}'
     ```
+
+### With Kubernetes
+
+1. Build images: `./scripts/build-with-docker.sh`
+2. Initialize configmaps, deployments and services: `./scripts/configure-k8s.sh`
+3. Configure port forwarding: `kubectl port-forward service/query-api 3000:80`
+4. Run the query with `curl`, same as for local version.
+
+### Output
 
 Sample text output:
 

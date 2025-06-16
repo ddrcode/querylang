@@ -15,4 +15,5 @@ rand = "0.9.1"
 serde = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
+toml = "0.8.23"
 

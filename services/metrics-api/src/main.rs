@@ -9,9 +9,13 @@ use axum::{
     routing::{get, post},
     serve,
 };
-use common::utils::load_config;
-use std::sync::Arc;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tokio::net::TcpListener;
+use toml;
 
 use crate::{
     api::{
@@ -25,7 +29,7 @@ use crate::{
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
-    let config = load_config::<Config>(env!("CARGO_MANIFEST_DIR"))?;
+    let config = load_config()?;
 
     let mock_repo = MetricsRepositoryMock::new();
     let metrics_srv = MetricsService::new(Arc::new(mock_repo));
@@ -41,4 +45,20 @@ async fn main() -> Result<(), anyhow::Error> {
     serve(listener, app).await.unwrap();
 
     Ok(())
+}
+
+fn load_config() -> Result<Config, anyhow::Error> {
+    let file: String = if fs::exists(Path::new("config/default.toml"))? {
+        "config/default.toml".into()
+    } else {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("config")
+            .join("default.toml")
+            .to_str()
+            .expect("Path is not a valid UTF-8")
+            .into()
+    };
+    let content = fs::read_to_string(file)?;
+    let config: Config = toml::from_str(&content)?;
+    Ok(config)
 }
