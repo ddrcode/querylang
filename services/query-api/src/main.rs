@@ -5,10 +5,13 @@ pub mod repository;
 pub mod service;
 pub mod shared;
 
-use std::{fs, sync::Arc};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 use axum::{Extension, Router, routing::post};
-// use common::utils::load_config;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
@@ -22,10 +25,6 @@ async fn main() -> Result<(), anyhow::Error> {
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
-    // let config = load_config::<Config>(env!("CARGO_MANIFEST_DIR")).unwrap_or(Config {
-    //     query_server: "0.0.0.0:3000".into(),
-    //     graphql_server: "http://metrics-api:8001/graphql".into()
-    // });
     let config = load_config()?;
 
     let metrics_repo = MetricsRepositoryGql::new(&config.graphql_server);
@@ -48,7 +47,16 @@ async fn main() -> Result<(), anyhow::Error> {
 }
 
 fn load_config() -> Result<Config, anyhow::Error> {
-    let content = fs::read_to_string("config/default.toml")?;
+    let file: String = if fs::exists(Path::new("config/default.toml"))? {
+        "config/default.toml".into()
+    } else {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("config")
+            .join("default.toml")
+            .to_str()
+            .expect("Path is not a valid UTF-8").into()
+    };
+    let content = fs::read_to_string(file)?;
     let config: Config = toml::from_str(&content)?;
     Ok(config)
 }
